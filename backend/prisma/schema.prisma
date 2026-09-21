@@ -1,0 +1,572 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+  PENDING_VERIFICATION
+}
+
+enum ExamType {
+  IELTS_ACADEMIC
+  IELTS_GENERAL
+  JLPT_N5
+  JLPT_N4
+  JLPT_N3
+  JLPT_N2
+  JLPT_N1
+}
+
+enum ContentType {
+  VIDEO
+  AUDIO
+  TEXT
+  QUIZ
+  INTERACTIVE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  TRIAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EVALUATED
+  FLAGGED
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE_NG
+  YES_NO_NG
+  MATCHING_HEADING
+  SENTENCE_COMPLETION
+  SUMMARY_COMPLETION
+  SHORT_ANSWER
+  MAP_LABELING
+  DIAGRAM_LABELING
+}
+
+enum IELTSSkill {
+  READING
+  LISTENING
+  WRITING
+  SPEAKING
+}
+
+// ─────────────────────────────────────────────
+// USERS & AUTH
+// ─────────────────────────────────────────────
+
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  phone           String?    @unique
+  passwordHash    String
+  role            Role       @default(STUDENT)
+  status          UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  profile          Profile?
+  refreshTokens    RefreshToken[]
+  subscription     Subscription?
+  payments         Payment[]
+  testAttempts     TestAttempt[]
+  lessonProgress   LessonProgress[]
+  aiEvaluations    AIEvaluation[]
+  studyPlans       StudyPlan[]
+  studyStreak      StudyStreak?
+  xpLedger         XPLedger[]
+  userAchievements UserAchievement[]
+  srsCards         SRSCard[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  createdCourses   Course[]          @relation("CourseCreator")
+
+  @@map("users")
+}
+
+model Profile {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String
+  avatarUrl             String?
+  bio                   String?
+  targetExam            ExamType?
+  targetScore           Float?
+  examDate              DateTime?
+  nationality           String?
+  timezone              String    @default("Asia/Dhaka")
+  nativeLanguage        String?
+  studyGoalMinutesPerDay Int      @default(30)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("profiles")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  deviceInfo String?
+  ipAddress  String?
+  isRevoked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  resource   String
+  resourceId String?
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTIONS & PAYMENTS
+// ─────────────────────────────────────────────
+
+model SubscriptionPlan {
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  descriptionEn String?
+  priceBDT      Decimal  @db.Decimal(10, 2)
+  priceUSD      Decimal  @db.Decimal(10, 2)
+  features      Json
+  durationDays  Int
+  isActive      Boolean  @default(true)
+  trialDays     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id          String             @id @default(uuid())
+  userId      String             @unique
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status      SubscriptionStatus @default(TRIAL)
+  startsAt    DateTime           @default(now())
+  expiresAt   DateTime
+  autoRenew   Boolean            @default(true)
+  cancelledAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  payments    Payment[]
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  amount         Decimal       @db.Decimal(10, 2)
+  currency       String        @default("BDT")
+  gateway        String
+  gatewayTxnId   String?       @unique
+  status         PaymentStatus @default(PENDING)
+  receiptUrl     String?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────
+// COURSES & LESSONS
+// ─────────────────────────────────────────────
+
+model Course {
+  id            String   @id @default(uuid())
+  title         String
+  slug          String   @unique
+  description   String
+  examType      ExamType
+  level         String
+  thumbnailUrl  String?
+  trailerUrl    String?
+  totalDuration Int      @default(0)
+  isPublished   Boolean  @default(false)
+  isFree        Boolean  @default(false)
+  createdById   String
+  createdBy     User     @relation("CourseCreator", fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  modules       Module[]
+
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id          String      @id @default(uuid())
+  moduleId    String
+  module      Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  contentType ContentType
+  contentUrl  String?
+  textContent String?
+  duration    Int         @default(0)
+  orderIndex  Int
+  isFree      Boolean     @default(false)
+  isPublished Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  progress    LessonProgress[]
+
+  @@map("lessons")
+}
+
+model LessonProgress {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId      String
+  lesson        Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  isCompleted   Boolean   @default(false)
+  completedAt   DateTime?
+  watchDuration Int       @default(0)
+  lastPosition  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+// ─────────────────────────────────────────────
+// IELTS TESTS
+// ─────────────────────────────────────────────
+
+model IELTSTest {
+  id               String     @id @default(uuid())
+  title            String
+  examType         ExamType
+  skill            IELTSSkill
+  durationMinutes  Int
+  totalQuestions   Int        @default(0)
+  isOfficialFormat Boolean    @default(false)
+  isPublished      Boolean    @default(false)
+  difficultyLevel  String     @default("intermediate")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  passages         TestPassage[]
+  questions        TestQuestion[]
+  attempts         TestAttempt[]
+
+  @@map("ielts_tests")
+}
+
+model TestPassage {
+  id            String    @id @default(uuid())
+  testId        String
+  test          IELTSTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  passageNumber Int
+  title         String?
+  content       String
+  wordCount     Int       @default(0)
+  audioUrl      String?
+  createdAt     DateTime  @default(now())
+
+  questions     TestQuestion[]
+
+  @@map("test_passages")
+}
+
+model TestQuestion {
+  id             String       @id @default(uuid())
+  testId         String
+  test           IELTSTest    @relation(fields: [testId], references: [id], onDelete: Cascade)
+  passageId      String?
+  passage        TestPassage? @relation(fields: [passageId], references: [id])
+  questionNumber Int
+  questionType   QuestionType
+  questionText   String
+  options        Json?
+  correctAnswer  String
+  explanation    String?
+  marks          Int          @default(1)
+  createdAt      DateTime     @default(now())
+
+  answers        AttemptAnswer[]
+
+  @@map("test_questions")
+}
+
+model TestAttempt {
+  id                 String        @id @default(uuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id])
+  testId             String
+  test               IELTSTest     @relation(fields: [testId], references: [id])
+  status             AttemptStatus @default(IN_PROGRESS)
+  startedAt          DateTime      @default(now())
+  submittedAt        DateTime?
+  bandScore          Float?
+  sectionScores      Json?
+  flaggedForCheating Boolean       @default(false)
+  warningCount       Int           @default(0)
+  ipAddress          String?
+  createdAt          DateTime      @default(now())
+
+  answers            AttemptAnswer[]
+  aiEvaluation       AIEvaluation?
+
+  @@map("test_attempts")
+}
+
+model AttemptAnswer {
+  id               String       @id @default(uuid())
+  attemptId        String
+  attempt          TestAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId       String
+  question         TestQuestion @relation(fields: [questionId], references: [id])
+  userAnswer       String?
+  isCorrect        Boolean?
+  timeSpentSeconds Int          @default(0)
+  createdAt        DateTime     @default(now())
+
+  @@unique([attemptId, questionId])
+  @@map("attempt_answers")
+}
+
+model AIEvaluation {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  attemptId     String?      @unique
+  attempt       TestAttempt? @relation(fields: [attemptId], references: [id])
+  evalType      String
+  inputRef      String?
+  modelUsed     String
+  promptVersion String       @default("v1")
+  rawResponse   String?
+  parsedScores  Json?
+  feedbackText  String?
+  processingMs  Int?
+  status        String       @default("pending")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("ai_evaluations")
+}
+
+// ─────────────────────────────────────────────
+// STUDY & PLANNING
+// ─────────────────────────────────────────────
+
+model StudyPlan {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetScore Float
+  examDate    DateTime
+  planData    Json
+  isActive    Boolean  @default(true)
+  generatedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("study_plans")
+}
+
+// ─────────────────────────────────────────────
+// JAPANESE LEARNING
+// ─────────────────────────────────────────────
+
+model Kanji {
+  id          String   @id @default(uuid())
+  character   String   @unique
+  onyomi      String[]
+  kunyomi     String[]
+  meanings    String[]
+  strokeCount Int
+  jlptLevel   String
+  frequency   Int?
+  strokeOrder Json?
+  createdAt   DateTime @default(now())
+
+  @@map("kanji")
+}
+
+model Vocabulary {
+  id                 String   @id @default(uuid())
+  word               String
+  reading            String
+  meaningEn          String
+  meaningBn          String?
+  exampleSentence    String?
+  exampleReading     String?
+  exampleTranslation String?
+  audioUrl           String?
+  jlptLevel          String
+  partOfSpeech       String?
+  tags               String[]
+  createdAt          DateTime @default(now())
+
+  @@map("vocabulary")
+}
+
+model SRSCard {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardType       String
+  cardId         String
+  easeFactor     Float     @default(2.5)
+  intervalDays   Int       @default(1)
+  repetitions    Int       @default(0)
+  dueAt          DateTime  @default(now())
+  lastReviewedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@unique([userId, cardType, cardId])
+  @@map("srs_cards")
+}
+
+// ─────────────────────────────────────────────
+// GAMIFICATION
+// ─────────────────────────────────────────────
+
+model Achievement {
+  id             String   @id @default(uuid())
+  name           String
+  description    String
+  iconUrl        String?
+  criteriaType   String
+  criteriaValue  Int
+  xpReward       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  earnedAt      DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model StudyStreak {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastStudyDate DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("study_streaks")
+}
+
+model XPLedger {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  reason      String
+  referenceId String?
+  createdAt   DateTime @default(now())
+
+  @@map("xp_ledger")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("notifications")
+}
