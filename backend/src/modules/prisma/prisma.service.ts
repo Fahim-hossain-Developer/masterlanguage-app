@@ -50,8 +50,8 @@ export class PrismaService
    * Utility: wrap operations in a Prisma transaction
    */
   async executeInTransaction<T>(
-    fn: (tx: Omit<PrismaService, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => Promise<T>,
+    fn: (tx: any) => Promise<T>,
   ): Promise<T> {
-    return this.$transaction(fn as Parameters<typeof this.$transaction>[0]);
+    return (this.$transaction as any)(fn);
   }
 }

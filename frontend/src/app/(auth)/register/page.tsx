@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import type { ExamType } from "@/types";
+import type { TrackType } from "@/types";
 
 const registerSchema = z
   .object({
@@ -22,7 +22,7 @@ const registerSchema = z
       .regex(/[A-Z]/, "Must contain at least one uppercase letter")
       .regex(/[0-9]/, "Must contain at least one number"),
     confirmPassword: z.string(),
-    targetExam: z.string().optional(),
+    targetTrack: z.string().optional(),
     phone: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -32,14 +32,14 @@ const registerSchema = z
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-const EXAM_OPTIONS: { value: ExamType; label: string }[] = [
-  { value: "IELTS_ACADEMIC", label: "IELTS Academic" },
-  { value: "IELTS_GENERAL", label: "IELTS General Training" },
-  { value: "JLPT_N5", label: "JLPT N5 (Beginner)" },
-  { value: "JLPT_N4", label: "JLPT N4 (Elementary)" },
-  { value: "JLPT_N3", label: "JLPT N3 (Intermediate)" },
-  { value: "JLPT_N2", label: "JLPT N2 (Upper Intermediate)" },
-  { value: "JLPT_N1", label: "JLPT N1 (Advanced)" },
+const TRACK_OPTIONS: { value: TrackType; label: string }[] = [
+  { value: "IELTS_ACADEMIC", label: "IELTS Academic (Higher Study)" },
+  { value: "IELTS_GENERAL", label: "IELTS General Training (Work/PR)" },
+  { value: "FOUNDATION_A1", label: "Foundation English A1 (Beginner)" },
+  { value: "FOUNDATION_A2", label: "Foundation English A2 (Elementary)" },
+  { value: "INTERMEDIATE_B1", label: "Intermediate English B1 (Fluency)" },
+  { value: "UPPER_INTERMEDIATE_B2", label: "Upper Intermediate B2 (Advanced)" },
+  { value: "SPOKEN_ENGLISH", label: "Spoken English & Pronunciation" },
 ];
 
 export default function RegisterPage() {
@@ -58,7 +58,7 @@ export default function RegisterPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      targetExam: "",
+      targetTrack: "",
       phone: "",
     },
   });
@@ -69,7 +69,7 @@ export default function RegisterPage() {
       email: data.email,
       password: data.password,
       confirmPassword: data.confirmPassword,
-      targetExam: data.targetExam as ExamType | undefined,
+      targetTrack: data.targetTrack as TrackType | undefined,
       phone: data.phone,
     });
   };
@@ -128,17 +128,17 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Target exam */}
+        {/* Target track */}
         <div className="space-y-1.5">
-          <Label htmlFor="targetExam">Target exam</Label>
+          <Label htmlFor="targetTrack">Learning Goal / Track</Label>
           <div className="relative">
             <select
-              id="targetExam"
+              id="targetTrack"
               className="flex h-10 w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              {...register("targetExam")}
+              {...register("targetTrack")}
             >
-              <option value="">Select your target exam (optional)</option>
-              {EXAM_OPTIONS.map((opt) => (
+              <option value="">Select your track (e.g. IELTS or Foundation)</option>
+              {TRACK_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>

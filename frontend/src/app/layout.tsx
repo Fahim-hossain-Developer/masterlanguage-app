@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_JP } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toast";
 import { ReactQueryProvider } from "./providers";
@@ -11,43 +11,37 @@ const inter = Inter({
   display: "swap",
 });
 
-const notoSansJP = Noto_Sans_JP({
-  subsets: ["latin"],
-  variable: "--font-noto-sans-jp",
-  display: "swap",
-  weight: ["400", "500", "700"],
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "MasterLanguage — AI-Powered IELTS & Japanese Learning",
-    template: "%s | MasterLanguage",
+    default: "MasterEnglish — AI-Powered English Learning & IELTS Preparation",
+    template: "%s | MasterEnglish",
   },
   description:
-    "Master IELTS and Japanese with AI-powered personalized learning. Practice speaking, writing, reading, and listening with instant AI feedback.",
+    "Master English from beginner (CEFR A1) to advanced (C1) and ace the IELTS exam with AI-powered personalized coaching, instant essay grading, and speaking interview simulation.",
   keywords: [
     "IELTS preparation",
-    "Japanese learning",
-    "JLPT",
-    "AI language learning",
-    "English test prep",
+    "English grammar",
+    "CEFR learning",
+    "AI speaking practice",
+    "IELTS writing evaluation",
+    "English vocabulary SRS",
   ],
-  authors: [{ name: "MasterLanguage Team" }],
-  creator: "MasterLanguage",
+  authors: [{ name: "MasterEnglish Team" }],
+  creator: "MasterEnglish",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-    title: "MasterLanguage — AI-Powered IELTS & Japanese Learning",
+    title: "MasterEnglish — AI-Powered English Learning & IELTS Preparation",
     description:
-      "Master IELTS and Japanese with AI-powered personalized learning.",
-    siteName: "MasterLanguage",
+      "Master English from beginner to advanced and ace your IELTS exam.",
+    siteName: "MasterEnglish",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MasterLanguage — AI-Powered IELTS & Japanese Learning",
+    title: "MasterEnglish — AI-Powered English Learning & IELTS Preparation",
     description:
-      "Master IELTS and Japanese with AI-powered personalized learning.",
+      "Master English from beginner to advanced and ace your IELTS exam.",
   },
   robots: {
     index: true,
@@ -63,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${notoSansJP.variable}`}
+      className={inter.variable}
       suppressHydrationWarning
     >
       <body className="font-sans bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-white min-h-screen">

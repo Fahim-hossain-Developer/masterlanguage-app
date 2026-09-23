@@ -25,7 +25,6 @@ import { RequestWithUser } from '../auth/interfaces/request-with-user.interface'
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 @Controller('users')
-@Version('1')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

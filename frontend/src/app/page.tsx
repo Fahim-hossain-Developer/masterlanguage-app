@@ -21,6 +21,7 @@ import {
   Users,
   BookOpen,
   Zap,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,9 +42,9 @@ const FEATURES = [
   },
   {
     icon: Mic,
-    title: "Speaking Practice",
+    title: "Speaking & Pronunciation Coach",
     description:
-      "Simulate real IELTS speaking interviews and Japanese conversation with our AI examiner. Get pronunciation and fluency scores instantly.",
+      "Simulate real IELTS speaking interviews and conversational English with our AI examiner. Get phoneme-level pronunciation and fluency scores instantly.",
     badge: "Voice AI",
     color: "bg-secondary-500",
     lightBg: "bg-secondary-50 dark:bg-secondary-900/20",
@@ -51,20 +52,20 @@ const FEATURES = [
   },
   {
     icon: Languages,
-    title: "JLPT Learning Path",
+    title: "Foundation English (CEFR A1–B2)",
     description:
-      "Structured N5 to N1 curriculum with kanji, grammar, vocabulary, and reading comprehension. Adaptive spaced repetition keeps you on track.",
-    badge: "N5 → N1",
+      "Master essential grammar rules, 3,500+ Oxford vocabulary words with Spaced Repetition, and interactive conversational roleplay from day one.",
+    badge: "A1 → C1",
     color: "bg-warning-500",
     lightBg: "bg-warning-50 dark:bg-yellow-900/20",
     iconColor: "text-warning-600 dark:text-warning-400",
   },
   {
     icon: ClipboardList,
-    title: "Full Mock Tests",
+    title: "Full Computer-Delivered IELTS",
     description:
-      "Timed, exam-accurate practice tests for all IELTS sections and JLPT levels. Detailed analytics show exactly where to improve.",
-    badge: "Exam-Ready",
+      "Timed, exam-accurate mock tests for Reading, Listening, Writing, and Speaking with official band scoring and predictive analytics.",
+    badge: "Band 7.5+ Target",
     color: "bg-success-500",
     lightBg: "bg-success-50 dark:bg-green-900/20",
     iconColor: "text-success-600 dark:text-success-400",
@@ -84,15 +85,15 @@ const TESTIMONIALS = [
     role: "IELTS Academic — Band 7.5",
     avatar: "TH",
     country: "🇯🇵",
-    text: "MasterLanguage's AI writing evaluator is incredible. It gave me detailed feedback on every paragraph. I went from Band 6.0 to 7.5 in just 3 months!",
+    text: "MasterEnglish's AI writing evaluator is incredible. It gave me detailed feedback on every paragraph. I went from Band 6.0 to 7.5 in just 3 months!",
     rating: 5,
   },
   {
     name: "Priya Sharma",
-    role: "JLPT N2 — Passed",
+    role: "Foundation English → Band 7.0",
     avatar: "PS",
     country: "🇮🇳",
-    text: "The JLPT learning path is so well-structured. The spaced repetition system helped me memorize over 2,000 kanji. Passed N2 on my first attempt!",
+    text: "I was terrified of English grammar. The Foundation Track took me from A2 to B2, and then I scored Band 7.0 on my IELTS Academic exam!",
     rating: 5,
   },
   {
@@ -100,7 +101,7 @@ const TESTIMONIALS = [
     role: "IELTS General — Band 8.0",
     avatar: "AR",
     country: "🇸🇦",
-    text: "The AI speaking practice prepared me perfectly. I practiced daily for 6 weeks, and the real examiner felt just like the AI sessions. Band 8.0!",
+    text: "The AI speaking examiner prepared me perfectly. I practiced daily for 6 weeks, and the real test felt just like the practice sessions. Band 8.0!",
     rating: 5,
   },
 ];
@@ -113,8 +114,8 @@ const PRICING = [
     description: "Perfect to get started",
     features: [
       "5 AI writing evaluations/month",
-      "10 mock test questions/day",
-      "JLPT N5 & N4 content",
+      "Foundation English Level A1 lessons",
+      "Daily vocabulary flashcards",
       "Basic progress tracking",
       "Community access",
     ],
@@ -130,12 +131,12 @@ const PRICING = [
     badge: "Most Popular",
     features: [
       "Unlimited AI writing evaluations",
-      "Unlimited mock tests",
-      "Full IELTS + JLPT content",
-      "AI speaking practice",
-      "Detailed analytics & weak areas",
-      "Priority AI feedback",
-      "Downloadable study materials",
+      "Unlimited IELTS mock tests",
+      "Full Foundation English (A1-C1) + IELTS",
+      "AI speaking practice & examiner",
+      "Grammar Lab interactive exercises",
+      "Detailed band score analytics",
+      "Downloadable Cambridge-style materials",
     ],
     cta: "Start Premium",
     variant: "default" as const,
@@ -148,11 +149,11 @@ const PRICING = [
     features: [
       "Everything in Premium",
       "1-on-1 AI coaching sessions",
-      "Personalized study schedule",
-      "Exam prediction reports",
-      "Direct teacher Q&A access",
-      "Exam-day simulation mode",
-      "Score guarantee program",
+      "Personalized daily study roadmap",
+      "Exam band score prediction report",
+      "Full IELTS simulation exam-day mode",
+      "Direct tutor Q&A support",
+      "Band 7.5 score guarantee program",
     ],
     cta: "Go Pro",
     variant: "secondary" as const,
@@ -556,7 +557,7 @@ export default function LandingPage() {
                 step: "01",
                 title: "Set Your Goal",
                 description:
-                  "Tell us your target exam (IELTS or JLPT), desired score, and exam date. We build a personalized study plan.",
+                  "Take our 15-minute diagnostic test to assess your CEFR level and set your target IELTS band. We build your personalized daily roadmap.",
                 icon: Target,
               },
               {

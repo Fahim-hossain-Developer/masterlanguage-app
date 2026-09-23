@@ -65,7 +65,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const { name, avatarUrl, bio, targetExam, targetScore, examDate, nationality, timezone, nativeLanguage, studyGoalMinutesPerDay } = dto;
+    const { name, avatarUrl, bio, targetTrack, currentCEFR, targetBand, examDate, nationality, timezone, nativeLanguage, studyGoalMinutesPerDay } = dto;
 
     const updatedProfile = await this.prisma.profile.upsert({
       where: { userId },
@@ -73,8 +73,9 @@ export class UsersService {
         ...(name !== undefined && { name }),
         ...(avatarUrl !== undefined && { avatarUrl }),
         ...(bio !== undefined && { bio }),
-        ...(targetExam !== undefined && { targetExam }),
-        ...(targetScore !== undefined && { targetScore }),
+        ...(targetTrack !== undefined && { targetTrack }),
+        ...(currentCEFR !== undefined && { currentCEFR }),
+        ...(targetBand !== undefined && { targetBand }),
         ...(examDate !== undefined && { examDate: new Date(examDate) }),
         ...(nationality !== undefined && { nationality }),
         ...(timezone !== undefined && { timezone }),
@@ -86,8 +87,9 @@ export class UsersService {
         name: name ?? 'User',
         avatarUrl,
         bio,
-        targetExam,
-        targetScore,
+        targetTrack,
+        currentCEFR,
+        targetBand,
         examDate: examDate ? new Date(examDate) : undefined,
         nationality,
         timezone: timezone ?? 'Asia/Dhaka',
@@ -123,8 +125,9 @@ export class UsersService {
             select: {
               name: true,
               avatarUrl: true,
-              targetExam: true,
-              targetScore: true,
+              targetTrack: true,
+              targetBand: true,
+              currentCEFR: true,
               examDate: true,
               studyGoalMinutesPerDay: true,
             },
@@ -159,7 +162,7 @@ export class UsersService {
           startedAt: true,
           submittedAt: true,
           test: {
-            select: { title: true, skill: true, examType: true },
+            select: { title: true, skill: true, trackType: true },
           },
         },
       }),

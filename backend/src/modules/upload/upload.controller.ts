@@ -34,7 +34,6 @@ const videoMemoryStorage = memoryStorage();
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 @Controller('upload')
-@Version('1')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 

@@ -11,8 +11,8 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ExamType } from '@prisma/client';
 import { Type } from 'class-transformer';
+import { TrackType, CEFRLevel } from '@prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'Fahim Hossain' })
@@ -33,17 +33,22 @@ export class UpdateProfileDto {
   @MaxLength(500)
   bio?: string;
 
-  @ApiPropertyOptional({ enum: ExamType, example: ExamType.IELTS_ACADEMIC })
+  @ApiPropertyOptional({ enum: TrackType, example: TrackType.IELTS_ACADEMIC })
   @IsOptional()
-  @IsEnum(ExamType)
-  targetExam?: ExamType;
+  @IsEnum(TrackType)
+  targetTrack?: TrackType;
 
-  @ApiPropertyOptional({ example: 7.5, description: 'Target band score or JLPT score' })
+  @ApiPropertyOptional({ enum: CEFRLevel, example: CEFRLevel.B1 })
+  @IsOptional()
+  @IsEnum(CEFRLevel)
+  currentCEFR?: CEFRLevel;
+
+  @ApiPropertyOptional({ example: 7.5, description: 'Target IELTS band score' })
   @IsOptional()
   @Type(() => Number)
   @Min(0)
   @Max(9)
-  targetScore?: number;
+  targetBand?: number;
 
   @ApiPropertyOptional({ example: '2025-06-15', description: 'Target exam date (ISO 8601)' })
   @IsOptional()

@@ -1,26 +1,33 @@
 // ─── Core Entity Types ───────────────────────────────────────────────────────
 
 export type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
-export type ExamType =
+
+export type TrackType =
+  | "FOUNDATION_A1"
+  | "FOUNDATION_A2"
+  | "INTERMEDIATE_B1"
+  | "UPPER_INTERMEDIATE_B2"
+  | "ADVANCED_C1"
   | "IELTS_ACADEMIC"
   | "IELTS_GENERAL"
-  | "JLPT_N1"
-  | "JLPT_N2"
-  | "JLPT_N3"
-  | "JLPT_N4"
-  | "JLPT_N5";
+  | "SPOKEN_ENGLISH";
+
+export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+
 export type SubscriptionPlan = "FREE" | "PREMIUM" | "PRO";
 export type SubscriptionStatus = "ACTIVE" | "CANCELLED" | "EXPIRED" | "TRIAL";
 
 export interface Profile {
   name: string;
   avatarUrl?: string;
-  targetExam?: ExamType;
-  targetScore?: number; // IELTS band (0-9) or JLPT level (1-5)
+  targetTrack?: TrackType;
+  currentCEFR?: CEFRLevel;
+  targetBand?: number; // Target IELTS band (e.g. 7.5)
   examDate?: string; // ISO date string
   phone?: string;
   country?: string;
   timezone?: string;
+  nativeLanguage?: string;
   bio?: string;
 }
 
@@ -37,15 +44,14 @@ export interface User {
 // ─── Course & Lesson ─────────────────────────────────────────────────────────
 
 export type CourseCategory =
+  | "FOUNDATION_GRAMMAR"
+  | "FOUNDATION_VOCABULARY"
+  | "SPOKEN_ENGLISH"
+  | "PRONUNCIATION"
   | "IELTS_READING"
   | "IELTS_WRITING"
   | "IELTS_LISTENING"
-  | "IELTS_SPEAKING"
-  | "JLPT_VOCABULARY"
-  | "JLPT_GRAMMAR"
-  | "JLPT_KANJI"
-  | "JLPT_READING"
-  | "JLPT_LISTENING";
+  | "IELTS_SPEAKING";
 
 export type DifficultyLevel =
   | "BEGINNER"
@@ -60,6 +66,8 @@ export interface Course {
   description: string;
   category: CourseCategory;
   difficulty: DifficultyLevel;
+  trackType: TrackType;
+  cefrLevel?: CEFRLevel;
   thumbnailUrl?: string;
   totalLessons: number;
   estimatedHours: number;
@@ -77,10 +85,10 @@ export type LessonType =
   | "VIDEO"
   | "READING"
   | "QUIZ"
+  | "GRAMMAR_LAB"
   | "WRITING_TASK"
   | "SPEAKING_PRACTICE"
-  | "VOCABULARY"
-  | "GRAMMAR";
+  | "VOCABULARY_SRS";
 
 export interface Lesson {
   id: string;
@@ -108,17 +116,62 @@ export interface UserProgress {
   completedAt?: string;
 }
 
+// ─── Foundation: Grammar & Vocab ──────────────────────────────────────────────
+
+export interface GrammarTopic {
+  id: string;
+  level: CEFRLevel;
+  title: string;
+  slug: string;
+  summaryEn: string;
+  summaryBn?: string;
+  contentEn: string;
+  contentBn?: string;
+  ruleExamples: Array<{ rule: string; example: string; translation?: string }>;
+  commonErrors?: Array<{ incorrect: string; correct: string; explanation: string }>;
+  exercisesCount: number;
+}
+
+export interface VocabularyItem {
+  id: string;
+  word: string;
+  phonetic?: string;
+  partOfSpeech: string;
+  level: CEFRLevel;
+  definitionEn: string;
+  definitionBn?: string;
+  exampleSentence: string;
+  exampleTranslation?: string;
+  collocations: string[];
+  synonyms: string[];
+  audioUrl?: string;
+  isAcademicWordList: boolean;
+}
+
+export interface SRSCard {
+  id: string;
+  userId: string;
+  vocabId: string;
+  vocab: VocabularyItem;
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  dueAt: string;
+  lastReviewedAt?: string;
+}
+
 // ─── Tests & Evaluations ─────────────────────────────────────────────────────
 
 export type TestType =
-  | "IELTS_FULL"
+  | "PLACEMENT_DIAGNOSTIC"
+  | "IELTS_ACADEMIC_FULL"
+  | "IELTS_GENERAL_FULL"
   | "IELTS_READING"
   | "IELTS_WRITING"
   | "IELTS_LISTENING"
   | "IELTS_SPEAKING"
-  | "JLPT_MOCK"
-  | "JLPT_VOCABULARY"
-  | "JLPT_GRAMMAR";
+  | "GRAMMAR_CHECK"
+  | "VOCAB_QUIZ";
 
 export type TestStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
 
@@ -158,6 +211,7 @@ export interface AIEvaluation {
   feedback: string;
   suggestions: string[];
   highlightedErrors?: ErrorHighlight[];
+  improvements?: Array<{ original: string; improved: string; reason: string }>;
   createdAt: string;
 }
 
@@ -185,38 +239,11 @@ export interface Subscription {
 export interface PricingPlan {
   id: SubscriptionPlan;
   name: string;
-  price: number; // USD per month
-  annualPrice?: number;
+  priceBDT: number;
+  priceUSD: number;
   features: string[];
   highlighted?: boolean;
   badge?: string;
-}
-
-// ─── Vocabulary & Flashcards ─────────────────────────────────────────────────
-
-export interface VocabularyItem {
-  id: string;
-  word: string;
-  reading?: string; // furigana for Japanese
-  meaning: string;
-  exampleSentence?: string;
-  exampleTranslation?: string;
-  imageUrl?: string;
-  audioUrl?: string;
-  jlptLevel?: "N1" | "N2" | "N3" | "N4" | "N5";
-  ieltsFrequency?: "HIGH" | "MEDIUM" | "LOW";
-  tags: string[];
-}
-
-export interface FlashcardDeck {
-  id: string;
-  userId: string;
-  name: string;
-  description?: string;
-  totalCards: number;
-  dueCount: number;
-  masteredCount: number;
-  createdAt: string;
 }
 
 // ─── Activity & Stats ────────────────────────────────────────────────────────
@@ -229,6 +256,7 @@ export interface StudyActivity {
     | "TEST_TAKEN"
     | "VOCABULARY_PRACTICED"
     | "SPEAKING_SESSION"
+    | "GRAMMAR_EXERCISE"
     | "AI_FEEDBACK";
   description: string;
   metadata?: Record<string, unknown>;
@@ -244,7 +272,7 @@ export interface UserStats {
   testsCompleted: number;
   lessonsCompleted: number;
   currentBand?: number;
-  currentLevel?: string;
+  currentCEFR?: CEFRLevel;
   weeklyGoalMinutes: number;
   weeklyStudiedMinutes: number;
 }
@@ -253,69 +281,36 @@ export interface WeakArea {
   category: string;
   score: number;
   maxScore: number;
-  lastPracticed?: string;
 }
 
 export interface StudyPlanItem {
   id: string;
   title: string;
-  type: LessonType;
-  duration: number; // minutes
+  type: LessonType | "TEST";
+  duration: number; // in minutes
   completed: boolean;
-  courseId?: string;
-  lessonId?: string;
 }
 
-// ─── Community ───────────────────────────────────────────────────────────────
-
-export interface Post {
-  id: string;
-  authorId: string;
-  author: Pick<User, "id" | "email" | "profile">;
-  title: string;
-  content: string;
-  category: string;
-  likesCount: number;
-  commentsCount: number;
-  isLiked: boolean;
-  createdAt: string;
-}
-
-export interface Comment {
-  id: string;
-  postId: string;
-  authorId: string;
-  author: Pick<User, "id" | "email" | "profile">;
-  content: string;
-  likesCount: number;
-  createdAt: string;
-}
-
-// ─── API Response Wrappers ────────────────────────────────────────────────────
+// ─── API & Auth Types ────────────────────────────────────────────────────────
 
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
+  timestamp: string;
+  path?: string;
 }
 
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: string;
 }
 
-export interface ApiError {
-  success: false;
-  message: string;
-  errors?: Record<string, string[]>;
-  statusCode: number;
+export interface AuthResponse {
+  user: User;
+  tokens: AuthTokens;
 }
-
-// ─── Auth ────────────────────────────────────────────────────────────────────
 
 export interface LoginPayload {
   email: string;
@@ -327,18 +322,7 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string;
-  targetExam?: ExamType;
+  confirmPassword?: string;
+  targetTrack?: TrackType;
   phone?: string;
-}
-
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn: number;
-}
-
-export interface AuthResponse {
-  user: User;
-  tokens: AuthTokens;
 }

@@ -9,7 +9,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ExamType } from '@prisma/client';
+import { TrackType } from '@prisma/client';
 
 export class RegisterDto {
   @ApiProperty({ example: 'Fahim Hossain', description: 'Full name' })
@@ -45,11 +45,11 @@ export class RegisterDto {
   phone?: string;
 
   @ApiPropertyOptional({
-    enum: ExamType,
-    example: ExamType.IELTS_ACADEMIC,
-    description: 'Target exam the student is preparing for',
+    enum: TrackType,
+    example: TrackType.IELTS_ACADEMIC,
+    description: 'Target learning track (IELTS or Foundation English)',
   })
   @IsOptional()
-  @IsEnum(ExamType)
-  targetExam?: ExamType;
+  @IsEnum(TrackType)
+  targetTrack?: TrackType;
 }

@@ -32,7 +32,7 @@ export interface LoginResponse {
     profile: {
       name: string;
       avatarUrl: string | null;
-      targetExam: string | null;
+      targetTrack: string | null;
     } | null;
   };
   tokens: AuthTokens;
@@ -91,7 +91,7 @@ export class AuthService {
           profile: {
             create: {
               name: dto.name,
-              targetExam: dto.targetExam ?? null,
+              targetTrack: dto.targetTrack ?? null,
             },
           },
         },
@@ -127,7 +127,7 @@ export class AuthService {
           ? {
               name: user.profile.name,
               avatarUrl: user.profile.avatarUrl,
-              targetExam: user.profile.targetExam,
+              targetTrack: user.profile.targetTrack,
             }
           : null,
       },
@@ -145,7 +145,7 @@ export class AuthService {
       where: { email: dto.email.toLowerCase() },
       include: {
         profile: {
-          select: { name: true, avatarUrl: true, targetExam: true },
+          select: { name: true, avatarUrl: true, targetTrack: true },
         },
       },
     });
@@ -192,7 +192,7 @@ export class AuthService {
           ? {
               name: user.profile.name,
               avatarUrl: user.profile.avatarUrl,
-              targetExam: user.profile.targetExam,
+              targetTrack: user.profile.targetTrack,
             }
           : null,
       },
@@ -300,8 +300,9 @@ export class AuthService {
             name: true,
             avatarUrl: true,
             bio: true,
-            targetExam: true,
-            targetScore: true,
+            targetTrack: true,
+            currentCEFR: true,
+            targetBand: true,
             examDate: true,
             nationality: true,
             timezone: true,

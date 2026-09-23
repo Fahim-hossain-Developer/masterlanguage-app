@@ -39,10 +39,10 @@ const MOCK_STATS: UserStats = {
 };
 
 const MOCK_WEAK_AREAS: WeakArea[] = [
-  { category: "IELTS Writing Task 2", score: 55, maxScore: 100 },
-  { category: "JLPT N3 Grammar", score: 62, maxScore: 100 },
-  { category: "IELTS Speaking Fluency", score: 68, maxScore: 100 },
-  { category: "Kanji Recognition", score: 71, maxScore: 100 },
+  { category: "IELTS Writing Task 2 (Coherence)", score: 55, maxScore: 100 },
+  { category: "Complex Tenses & Prepositions (B1)", score: 62, maxScore: 100 },
+  { category: "IELTS Speaking Part 3 (Fluency)", score: 68, maxScore: 100 },
+  { category: "Academic Vocabulary & Collocations", score: 71, maxScore: 100 },
 ];
 
 const MOCK_ACTIVITIES: StudyActivity[] = [
@@ -58,7 +58,7 @@ const MOCK_ACTIVITIES: StudyActivity[] = [
     id: "2",
     userId: "u1",
     type: "AI_FEEDBACK",
-    description: "AI evaluated your Writing Task 2 essay",
+    description: "AI evaluated your Writing Task 2 essay (Band 6.5)",
     points: 50,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
   },
@@ -66,7 +66,7 @@ const MOCK_ACTIVITIES: StudyActivity[] = [
     id: "3",
     userId: "u1",
     type: "LESSON_COMPLETED",
-    description: "Finished: JLPT N3 Grammar - Conditional Forms",
+    description: "Finished: Grammar Lab - Conditionals & Modals (B1)",
     points: 80,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
   },
@@ -74,7 +74,7 @@ const MOCK_ACTIVITIES: StudyActivity[] = [
     id: "4",
     userId: "u1",
     type: "VOCABULARY_PRACTICED",
-    description: "Practiced 25 JLPT N3 vocabulary flashcards",
+    description: "Practiced 25 Oxford 3000 Academic Vocabulary cards",
     points: 40,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
   },
@@ -90,8 +90,8 @@ const MOCK_STUDY_PLAN: StudyPlanItem[] = [
   },
   {
     id: "sp2",
-    title: "JLPT N3 Vocabulary Set 12",
-    type: "VOCABULARY",
+    title: "Grammar Lab: Subject-Verb Agreement",
+    type: "GRAMMAR_LAB",
     duration: 20,
     completed: false,
   },
@@ -116,6 +116,7 @@ const activityIconMap: Record<StudyActivity["type"], string> = {
   TEST_TAKEN: "📝",
   VOCABULARY_PRACTICED: "🔤",
   SPEAKING_SESSION: "🎙️",
+  GRAMMAR_EXERCISE: "✍️",
   AI_FEEDBACK: "🤖",
 };
 
@@ -156,10 +157,11 @@ export default function DashboardPage() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {format(new Date(), "EEEE, MMMM d")} ·{" "}
-            {user?.profile?.targetExam
-              ? `Target: ${user.profile.targetExam.replace("_", " ")}`
-              : "Set your target exam in settings"}
-            {user?.profile?.targetScore && ` · Goal: Band ${user.profile.targetScore}`}
+            {user?.profile?.targetTrack
+              ? `Track: ${user.profile.targetTrack.replace(/_/g, " ")}`
+              : "Set your learning track in settings"}
+            {user?.profile?.targetBand && ` · Goal: Band ${user.profile.targetBand}`}
+            {user?.profile?.currentCEFR && ` · Level: ${user.profile.currentCEFR}`}
           </p>
         </div>
         <div className="flex gap-2">

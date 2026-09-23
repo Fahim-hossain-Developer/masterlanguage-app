@@ -34,11 +34,11 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "IELTS", href: "/dashboard/ielts", icon: BookOpen },
-  { label: "Japanese", href: "/dashboard/japanese", icon: Languages },
+  { label: "Foundation English", href: "/dashboard/foundation", icon: Languages, badge: "A1-C1" },
+  { label: "IELTS Prep", href: "/dashboard/ielts", icon: BookOpen },
   { label: "Mock Tests", href: "/dashboard/tests", icon: ClipboardList },
   { label: "Progress", href: "/dashboard/progress", icon: TrendingUp },
-  { label: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot, badge: "AI" },
+  { label: "AI Speaking Coach", href: "/dashboard/ai-tutor", icon: Bot, badge: "AI" },
   { label: "Community", href: "/dashboard/community", icon: Users },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

@@ -37,7 +37,6 @@ interface RequestWithRefreshUser extends Request {
 
 @ApiTags('Auth')
 @Controller('auth')
-@Version('1')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
