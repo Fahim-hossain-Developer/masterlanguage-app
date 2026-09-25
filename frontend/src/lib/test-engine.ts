@@ -9,6 +9,7 @@ import {
   type DifficultyLevel,
   type IELTSQuestionType,
 } from "./question-bank";
+import { getCMSDataSync } from "./cms-store";
 
 // ============================================================
 // TYPES FOR REUSABLE TEST ENGINE, AUTO-SAVE, RESULTS & BOOKMARKS
@@ -128,16 +129,24 @@ export function isAnswerCorrect(question: QuestionItem, rawUserAnswer: string): 
 }
 
 // ============================================================
-// QUESTION & PASSAGE LOOKUP HELPERS
+// QUESTION & PASSAGE LOOKUP HELPERS (READS DYNAMIC CMS DATA)
 // ============================================================
 
 export function getQuestionById(questionId: string): QuestionItem | undefined {
-  return QUESTION_BANK.find((q) => q.question_id === questionId);
+  const cms = getCMSDataSync();
+  return (
+    cms.questions.find((q) => q.question_id === questionId) ||
+    QUESTION_BANK.find((q) => q.question_id === questionId)
+  );
 }
 
 export function getPassageById(passageId?: string): PassageItem | undefined {
   if (!passageId) return undefined;
-  return PASSAGES_DB.find((p) => p.id === passageId);
+  const cms = getCMSDataSync();
+  return (
+    cms.passages.find((p) => p.id === passageId) ||
+    PASSAGES_DB.find((p) => p.id === passageId)
+  );
 }
 
 export function filterQuestionBank(params: {
@@ -148,7 +157,8 @@ export function filterQuestionBank(params: {
   searchQuery?: string;
   limit?: number;
 }): QuestionItem[] {
-  let list = [...QUESTION_BANK];
+  const cms = getCMSDataSync();
+  let list = [...cms.questions];
 
   if (params.category && params.category !== "All") {
     list = list.filter((q) => q.category.toLowerCase() === params.category!.toLowerCase());
@@ -312,8 +322,12 @@ export function startDailyPracticeAttempt(
   setId: string,
   mode: "timed" | "practice" = "timed"
 ): ActiveTestAttempt {
+  const cms = getCMSDataSync();
   const dailySet =
-    DAILY_PRACTICE_DB.find((d) => d.id === setId) || DAILY_PRACTICE_DB[0];
+    cms.dailyPractice.find((d) => d.id === setId) ||
+    DAILY_PRACTICE_DB.find((d) => d.id === setId) ||
+    cms.dailyPractice[0] ||
+    DAILY_PRACTICE_DB[0];
   return startCustomQuestionSetAttempt({
     title: dailySet.title,
     module: `Daily Practice · ${dailySet.category}`,

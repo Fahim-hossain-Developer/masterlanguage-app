@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Bookmark, ArrowRight, Layers } from "lucide-react";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { MainFooter } from "@/components/layout/main-footer";
-import { TIPS_DB } from "@/lib/question-bank";
+import { useCMSContent } from "@/lib/cms-store";
 import { toggleBookmarkItem, isItemBookmarked } from "@/lib/test-engine";
 
 export default function TipArticleDetailPage({
@@ -14,8 +14,29 @@ export default function TipArticleDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
-  const article = TIPS_DB.find((t) => t.slug === slug) || TIPS_DB[0];
-  const [saved, setSaved] = useState(() => isItemBookmarked(article.id));
+  const { data } = useCMSContent();
+  const article = data.tips.find((t) => t.slug === slug) || data.tips[0];
+  const [saved, setSaved] = useState(() =>
+    article ? isItemBookmarked(article.id) : false
+  );
+
+  if (!article) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+        <MainNavbar />
+        <main className="flex-1 mx-auto max-w-3xl px-4 py-16 text-center">
+          <p className="text-sm font-bold text-slate-700">Tip article not found.</p>
+          <Link
+            href="/tips"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white"
+          >
+            Back to Tips
+          </Link>
+        </main>
+        <MainFooter />
+      </div>
+    );
+  }
 
   const handleBookmark = () => {
     const next = toggleBookmarkItem({

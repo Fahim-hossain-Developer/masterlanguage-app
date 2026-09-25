@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   BookOpen,
@@ -12,19 +14,15 @@ import {
   Lightbulb,
   ArrowRight,
   CheckCircle2,
-  Search,
 } from "lucide-react";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { MainFooter } from "@/components/layout/main-footer";
-import {
-  ENGLISH_LEVELS,
-  BOOKS_DB,
-  TIPS_DB,
-  DAILY_PRACTICE_DB,
-  TESTS_DB,
-} from "@/lib/question-bank";
+import { ENGLISH_LEVELS, TESTS_DB } from "@/lib/question-bank";
+import { useCMSContent } from "@/lib/cms-store";
 
 export default function HomePage() {
+  const { data } = useCMSContent();
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       <MainNavbar />
@@ -341,7 +339,7 @@ export default function HomePage() {
               </p>
 
               <div className="mt-4 space-y-2.5">
-                {DAILY_PRACTICE_DB.slice(0, 3).map((set) => (
+                {data.dailySets.slice(0, 3).map((set) => (
                   <Link
                     key={set.id}
                     href={`/daily-practice?start=${set.id}`}
@@ -394,7 +392,7 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-3">
-                {BOOKS_DB.map((book) => (
+                {data.books.slice(0, 4).map((book) => (
                   <Link
                     key={book.id}
                     href={`/books/${book.slug}`}
@@ -445,7 +443,7 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-3">
-                {TIPS_DB.map((tip) => (
+                {data.tips.slice(0, 4).map((tip) => (
                   <Link
                     key={tip.id}
                     href={`/tips/${tip.slug}`}

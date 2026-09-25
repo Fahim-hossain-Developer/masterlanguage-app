@@ -5,15 +5,11 @@ import Link from "next/link";
 import { Search as SearchIcon, ArrowRight } from "lucide-react";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { MainFooter } from "@/components/layout/main-footer";
-import {
-  TESTS_DB,
-  QUESTION_BANK,
-  ENGLISH_LESSONS_DB,
-  BOOKS_DB,
-  TIPS_DB,
-} from "@/lib/question-bank";
+import { TESTS_DB } from "@/lib/question-bank";
+import { useCMSContent } from "@/lib/cms-store";
 
 export default function GlobalSearchPage() {
+  const { data } = useCMSContent();
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<
     "All" | "IELTS" | "Questions" | "Lessons" | "Books" | "Tips"
@@ -27,26 +23,26 @@ export default function GlobalSearchPage() {
       t.title.toLowerCase().includes(qLower) ||
       t.subtitle.toLowerCase().includes(qLower)
   );
-  const matchedQuestions = QUESTION_BANK.filter(
+  const matchedQuestions = data.questions.filter(
     (q) =>
       !qLower ||
       q.question_text.toLowerCase().includes(qLower) ||
       q.topic.toLowerCase().includes(qLower) ||
       q.question_type.toLowerCase().includes(qLower)
   );
-  const matchedLessons = ENGLISH_LESSONS_DB.filter(
+  const matchedLessons = data.englishLessons.filter(
     (l) =>
       !qLower ||
       l.title.toLowerCase().includes(qLower) ||
       l.topic.toLowerCase().includes(qLower)
   );
-  const matchedBooks = BOOKS_DB.filter(
+  const matchedBooks = data.books.filter(
     (b) =>
       !qLower ||
       b.title.toLowerCase().includes(qLower) ||
       b.description.toLowerCase().includes(qLower)
   );
-  const matchedTips = TIPS_DB.filter(
+  const matchedTips = data.tips.filter(
     (t) =>
       !qLower ||
       t.title.toLowerCase().includes(qLower) ||

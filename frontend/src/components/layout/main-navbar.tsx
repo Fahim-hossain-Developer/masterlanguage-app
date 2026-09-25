@@ -191,7 +191,7 @@ export function MainNavbar() {
           </nav>
         </div>
 
-        {/* Right Actions: Search, Results, Student Dashboard, Login */}
+        {/* Right Actions: Search, Admin Panel, Results, Student Dashboard, Login */}
         <div className="hidden md:flex items-center gap-2">
           <Link
             href="/search"
@@ -199,6 +199,18 @@ export function MainNavbar() {
           >
             <Search className="h-3.5 w-3.5" />
             <span>Search</span>
+          </Link>
+
+          <Link
+            href="/admin"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors",
+              pathname.startsWith("/admin")
+                ? "border-emerald-600 bg-emerald-600 text-white"
+                : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+            )}
+          >
+            <span>Admin Panel</span>
           </Link>
 
           <Link
@@ -249,14 +261,21 @@ export function MainNavbar() {
       {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="border-t border-slate-200 bg-white px-4 py-4 lg:hidden space-y-4">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Link
               href="/dashboard"
               onClick={() => setMobileOpen(false)}
               className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-700 py-2.5 text-xs font-bold text-white"
             >
               <LayoutDashboard className="h-3.5 w-3.5" />
-              Student Dashboard
+              Dashboard
+            </Link>
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 py-2.5 text-xs font-bold text-emerald-700"
+            >
+              Admin Panel
             </Link>
             <Link
               href="/dashboard/results"
@@ -264,7 +283,7 @@ export function MainNavbar() {
               className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-700"
             >
               <FileCheck2 className="h-3.5 w-3.5 text-blue-700" />
-              My Results
+              Results
             </Link>
           </div>
 
