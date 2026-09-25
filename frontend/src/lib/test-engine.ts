@@ -10,6 +10,7 @@ import {
   type IELTSQuestionType,
 } from "./question-bank";
 import { getCMSDataSync } from "./cms-store";
+import { buildCambridgeEngineConfig } from "./cambridge-data";
 
 // ============================================================
 // TYPES FOR REUSABLE TEST ENGINE, AUTO-SAVE, RESULTS & BOOKMARKS
@@ -134,19 +135,35 @@ export function isAnswerCorrect(question: QuestionItem, rawUserAnswer: string): 
 
 export function getQuestionById(questionId: string): QuestionItem | undefined {
   const cms = getCMSDataSync();
-  return (
+  const found =
     cms.questions.find((q) => q.question_id === questionId) ||
-    QUESTION_BANK.find((q) => q.question_id === questionId)
-  );
+    QUESTION_BANK.find((q) => q.question_id === questionId);
+  if (found) return found;
+
+  // Dynamic Cambridge 9-19 question lookup (e.g., "cam-9-test-1-r1")
+  const match = questionId.match(/^(cam-\d+-test-\d+)-[rl]\d+$/);
+  if (match) {
+    const built = buildCambridgeEngineConfig(match[1], "Full Mock");
+    return built?.questions.find((q) => q.question_id === questionId);
+  }
+  return undefined;
 }
 
 export function getPassageById(passageId?: string): PassageItem | undefined {
   if (!passageId) return undefined;
   const cms = getCMSDataSync();
-  return (
+  const found =
     cms.passages.find((p) => p.id === passageId) ||
-    PASSAGES_DB.find((p) => p.id === passageId)
-  );
+    PASSAGES_DB.find((p) => p.id === passageId);
+  if (found) return found;
+
+  // Dynamic Cambridge 9-19 passage lookup (e.g., "passage-cam-9-test-1-reading")
+  const match = passageId.match(/^passage-(cam-\d+-test-\d+)-(reading|listening)$/);
+  if (match) {
+    const built = buildCambridgeEngineConfig(match[1], "Full Mock");
+    return built?.passages.find((p) => p.id === passageId);
+  }
+  return undefined;
 }
 
 export function filterQuestionBank(params: {
@@ -223,6 +240,61 @@ export function getLatestActiveAttempt(): ActiveTestAttempt | null {
 export function getActiveAttemptById(attemptId: string): ActiveTestAttempt | null {
   const map = getAllActiveAttempts();
   return map[attemptId] || null;
+}
+
+export function startCambridgeTestAttempt(
+  camTestId: string,
+  moduleType: "Reading" | "Listening" | "Full Mock",
+  mode: "timed" | "practice" = "timed"
+): ActiveTestAttempt {
+  const built = buildCambridgeEngineConfig(camTestId, moduleType);
+  if (!built) {
+    return startStandardTestAttempt("test-full-mock-01", mode);
+  }
+  const { testConfig, passages } = built;
+
+  const existingMap = getAllActiveAttempts();
+  const existing = Object.values(existingMap).find(
+    (a) => a.testId === testConfig.id && a.mode === mode
+  );
+  if (existing && (!existing.expiresAt || existing.expiresAt > Date.now())) {
+    return existing;
+  }
+
+  const now = Date.now();
+  const attemptId = `attempt-${testConfig.id}-${now}`;
+  const attempt: ActiveTestAttempt = {
+    attemptId,
+    testId: testConfig.id,
+    title: testConfig.title,
+    module: testConfig.module,
+    mode,
+    startedAt: now,
+    expiresAt:
+      mode === "timed" ? now + testConfig.durationMinutes * 60 * 1000 : null,
+    lastSavedAt: now,
+    currentSectionIdx: 0,
+    currentQuestionIdx: 0,
+    answers: {},
+    markedForReview: [],
+    sections: testConfig.sections.map((s) => {
+      const p = passages.find((pas) => pas.id === s.passageId);
+      return {
+        id: s.id,
+        title: s.title,
+        module: testConfig.module,
+        passageId: s.passageId,
+        audioUrl: p?.audioUrl,
+        audioTitle: p?.title,
+        questionIds: s.questionIds,
+      };
+    }),
+    isBandScored: true,
+  };
+
+  existingMap[attemptId] = attempt;
+  writeJson(STORAGE_KEYS.ACTIVE_ATTEMPTS, existingMap);
+  return attempt;
 }
 
 export function startStandardTestAttempt(

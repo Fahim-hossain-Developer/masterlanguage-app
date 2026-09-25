@@ -18,13 +18,44 @@ import {
 import { cn } from "@/lib/utils";
 
 const IELTS_LINKS = [
-  { label: "Full Mock Test", href: "/ielts/full-mock", desc: "Complete 4-module exam simulation" },
-  { label: "Reading", href: "/ielts/reading", desc: "Passages, timed & untimed practice" },
-  { label: "Listening", href: "/ielts/listening", desc: "Audio sections & form completion" },
-  { label: "Writing", href: "/ielts/writing", desc: "Task 1 & Task 2 prompts & drafts" },
-  { label: "Speaking", href: "/ielts/speaking", desc: "Part 1, 2 & 3 timers & audio recorder" },
-  { label: "Question Types", href: "/ielts/question-types", desc: "Filter by type, difficulty & topic" },
+  {
+    label: "Cambridge IELTS 9–19 Hub",
+    href: "/ielts",
+    desc: "All 11 Books (Cambridge 9 to 19) · Test 1, 2, 3 & 4",
+  },
+  {
+    label: "Full Mock Test (Cam 9–19)",
+    href: "/ielts/full-mock",
+    desc: "Complete 4-module Cambridge exam simulation",
+  },
+  {
+    label: "Reading (Cam 9–19)",
+    href: "/ielts/reading",
+    desc: "Cambridge 9–19 Passages 1, 2 & 3 (Timed & Practice)",
+  },
+  {
+    label: "Listening (Cam 9–19)",
+    href: "/ielts/listening",
+    desc: "Cambridge 9–19 Audio Parts 1, 2, 3 & 4",
+  },
+  {
+    label: "Writing (Cam 9–19)",
+    href: "/ielts/writing",
+    desc: "Cambridge 9–19 Task 1 Charts & Task 2 Essays",
+  },
+  {
+    label: "Speaking (Cam 9–19)",
+    href: "/ielts/speaking",
+    desc: "Cambridge 9–19 Part 1, Part 2 Cue Cards & Part 3",
+  },
+  {
+    label: "Question Types",
+    href: "/ielts/question-types",
+    desc: "Filter by type, difficulty & topic",
+  },
 ];
+
+const CAMBRIDGE_NUMBERS = [19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9];
 
 const ENGLISH_LEVEL_LINKS = [
   { label: "Basic", href: "/english/basic", badge: "Level 1" },
@@ -93,20 +124,44 @@ export function MainNavbar() {
               </Link>
 
               {ieltsOpen && (
-                <div className="absolute left-0 top-full w-72 pt-1.5">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                    {IELTS_LINKS.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="block rounded-xl px-3.5 py-2.5 hover:bg-blue-50/70 transition-colors"
-                      >
-                        <div className="text-sm font-bold text-slate-900">
-                          {item.label}
-                        </div>
-                        <div className="text-xs text-slate-500">{item.desc}</div>
-                      </Link>
-                    ))}
+                <div className="absolute left-0 top-full w-96 pt-1.5">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+                    {/* Quick Cambridge 9-19 Book Selector Strip */}
+                    <div className="mb-2.5 rounded-xl bg-slate-50 p-2.5 border border-slate-200/70">
+                      <div className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 mb-1.5">
+                        Cambridge IELTS Series (Book 9 → 19)
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {CAMBRIDGE_NUMBERS.map((num) => (
+                          <Link
+                            key={num}
+                            href={`/ielts?book=${num}`}
+                            onClick={() => setIeltsOpen(false)}
+                            className="rounded-md border border-slate-200 bg-white hover:border-blue-600 hover:bg-blue-600 hover:text-white px-2 py-1 text-[11px] font-extrabold text-slate-800 transition-colors"
+                          >
+                            Cam {num}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      {IELTS_LINKS.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIeltsOpen(false)}
+                          className="block rounded-xl px-3 py-2 hover:bg-blue-50/70 transition-colors"
+                        >
+                          <div className="text-sm font-bold text-slate-900">
+                            {item.label}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {item.desc}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
