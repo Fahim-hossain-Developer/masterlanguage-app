@@ -28,7 +28,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  // Ensure same-origin PDFs can be embedded inside <object> and <iframe>
+  res.headers.set("X-Frame-Options", "SAMEORIGIN");
+  return res;
 }
 
 export const config = {

@@ -24,7 +24,9 @@ export interface CMSDataStore {
   books: BookItem[];
   tips: TipArticleItem[];
   dailyPractice: DailyPracticeSetItem[];
+  dailySets: DailyPracticeSetItem[];
   lessons: EnglishLessonItem[];
+  englishLessons: EnglishLessonItem[];
   vocabulary: VocabularyEntry[];
   questions: QuestionItem[];
   passages: PassageItem[];
@@ -33,17 +35,25 @@ export interface CMSDataStore {
 
 const CMS_STORAGE_KEY = "me_cms_store_v1";
 
-export function getDefaultCMSData(): CMSDataStore {
+function withAliases(raw: Partial<CMSDataStore>): CMSDataStore {
+  const daily = raw.dailyPractice ?? raw.dailySets ?? DAILY_PRACTICE_DB;
+  const lessons = raw.lessons ?? raw.englishLessons ?? ENGLISH_LESSONS_DB;
   return {
-    books: BOOKS_DB,
-    tips: TIPS_DB,
-    dailyPractice: DAILY_PRACTICE_DB,
-    lessons: ENGLISH_LESSONS_DB,
-    vocabulary: VOCABULARY_DB,
-    questions: QUESTION_BANK,
-    passages: PASSAGES_DB,
-    tests: TESTS_DB,
+    books: raw.books ?? BOOKS_DB,
+    tips: raw.tips ?? TIPS_DB,
+    dailyPractice: daily,
+    dailySets: daily,
+    lessons,
+    englishLessons: lessons,
+    vocabulary: raw.vocabulary ?? VOCABULARY_DB,
+    questions: raw.questions ?? QUESTION_BANK,
+    passages: raw.passages ?? PASSAGES_DB,
+    tests: raw.tests ?? TESTS_DB,
   };
+}
+
+export function getDefaultCMSData(): CMSDataStore {
+  return withAliases({});
 }
 
 export function getCMSDataSync(): CMSDataStore {
@@ -52,16 +62,7 @@ export function getCMSDataSync(): CMSDataStore {
     const raw = window.localStorage.getItem(CMS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<CMSDataStore>;
-      return {
-        books: parsed.books ?? BOOKS_DB,
-        tips: parsed.tips ?? TIPS_DB,
-        dailyPractice: parsed.dailyPractice ?? DAILY_PRACTICE_DB,
-        lessons: parsed.lessons ?? ENGLISH_LESSONS_DB,
-        vocabulary: parsed.vocabulary ?? VOCABULARY_DB,
-        questions: parsed.questions ?? QUESTION_BANK,
-        passages: parsed.passages ?? PASSAGES_DB,
-        tests: parsed.tests ?? TESTS_DB,
-      };
+      return withAliases(parsed);
     }
   } catch {
     // ignore
@@ -70,9 +71,10 @@ export function getCMSDataSync(): CMSDataStore {
 }
 
 export async function saveCMSData(nextData: CMSDataStore): Promise<void> {
+  const normalized = withAliases(nextData);
   if (typeof window !== "undefined") {
     try {
-      window.localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(nextData));
+      window.localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(normalized));
       window.dispatchEvent(new Event("me-cms-updated"));
     } catch {
       // ignore
@@ -83,7 +85,7 @@ export async function saveCMSData(nextData: CMSDataStore): Promise<void> {
     await fetch("/api/cms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nextData),
+      body: JSON.stringify(normalized),
     });
   } catch {
     // ignore offline error
@@ -95,18 +97,20 @@ export function useCMSContent() {
   const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(async () => {
-    // First load from localStorage immediately
     const local = getCMSDataSync();
     setData(local);
 
-    // Also fetch from server disk store (/api/cms) if localStorage wasn't customized yet
-    if (typeof window !== "undefined" && !window.localStorage.getItem(CMS_STORAGE_KEY)) {
+    if (typeof window !== "undefined") {
       try {
-        const res = await fetch("/api/cms");
+        const res = await fetch("/api/cms", { cache: "no-store" });
         if (res.ok) {
-          const serverData = (await res.json()) as CMSDataStore;
-          window.localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(serverData));
-          setData(serverData);
+          const serverRaw = (await res.json()) as Partial<CMSDataStore>;
+          const normalized = withAliases(serverRaw);
+          window.localStorage.setItem(
+            CMS_STORAGE_KEY,
+            JSON.stringify(normalized)
+          );
+          setData(normalized);
         }
       } catch {
         // fallback to local
@@ -124,9 +128,11 @@ export function useCMSContent() {
     return () => window.removeEventListener("me-cms-updated", handler);
   }, [refresh]);
 
-  const updateStore = async (updater: (prev: CMSDataStore) => CMSDataStore) => {
+  const updateStore = async (
+    updater: (prev: CMSDataStore) => Partial<CMSDataStore>
+  ) => {
     const current = getCMSDataSync();
-    const next = updater(current);
+    const next = withAliases(updater(current));
     setData(next);
     await saveCMSData(next);
   };

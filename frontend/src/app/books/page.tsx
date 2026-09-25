@@ -81,6 +81,7 @@ export default function BooksLibraryPage() {
               const hasUploadedPdf = Boolean(
                 book.pdfUrl &&
                   (book.pdfUrl.startsWith("/uploads/") ||
+                    book.pdfUrl.startsWith("/api/files/") ||
                     book.pdfUrl.startsWith("http"))
               );
               return (

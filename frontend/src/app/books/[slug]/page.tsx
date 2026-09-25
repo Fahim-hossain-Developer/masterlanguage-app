@@ -12,12 +12,24 @@ import {
   Bookmark,
   Search,
   ExternalLink,
-  FileText,
 } from "lucide-react";
 import { MainNavbar } from "@/components/layout/main-navbar";
 import { MainFooter } from "@/components/layout/main-footer";
 import { useCMSContent } from "@/lib/cms-store";
 import { toggleBookmarkItem, isItemBookmarked } from "@/lib/test-engine";
+
+function resolveUploadedPdfUrl(rawUrl?: string): string | null {
+  if (!rawUrl) return null;
+  if (rawUrl.startsWith("/api/files/")) return rawUrl;
+  if (rawUrl.startsWith("/uploads/")) {
+    const fileName = rawUrl.replace("/uploads/", "");
+    return `/api/files/${fileName}`;
+  }
+  if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+    return rawUrl;
+  }
+  return null;
+}
 
 export default function BookReaderPage({
   params,
@@ -28,10 +40,8 @@ export default function BookReaderPage({
   const { data } = useCMSContent();
   const book = data.books.find((b) => b.slug === slug) || data.books[0];
 
-  const hasUploadedPdf = Boolean(
-    book?.pdfUrl &&
-      (book.pdfUrl.startsWith("/uploads/") || book.pdfUrl.startsWith("http"))
-  );
+  const resolvedPdfUrl = resolveUploadedPdfUrl(book?.pdfUrl);
+  const hasUploadedPdf = Boolean(resolvedPdfUrl);
 
   const [viewMode, setViewMode] = useState<"pdf" | "text">("pdf");
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,9 +112,9 @@ export default function BookReaderPage({
             </div>
 
             <div className="flex items-center gap-2">
-              {hasUploadedPdf && (
+              {resolvedPdfUrl && (
                 <a
-                  href={book.pdfUrl}
+                  href={resolvedPdfUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
@@ -247,15 +257,23 @@ export default function BookReaderPage({
           </div>
 
           {/* Document Canvas: Embedded PDF or Structured Text Reader */}
-          {hasUploadedPdf && viewMode === "pdf" ? (
+          {resolvedPdfUrl && viewMode === "pdf" ? (
             <div className="flex-1 bg-slate-800">
-              <iframe
-                src={book.pdfUrl}
-                title={book.title}
+              <object
+                data={resolvedPdfUrl}
+                type="application/pdf"
                 className={`w-full border-0 ${
-                  isFullscreen ? "h-full" : "h-[760px]"
+                  isFullscreen ? "h-full" : "h-[780px]"
                 }`}
-              />
+              >
+                <iframe
+                  src={resolvedPdfUrl}
+                  title={book.title}
+                  className={`w-full border-0 ${
+                    isFullscreen ? "h-full" : "h-[780px]"
+                  }`}
+                />
+              </object>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto bg-slate-100 p-4 sm:p-10">

@@ -1,6 +1,27 @@
 {
   "books": [
     {
+      "id": "book-1790357900768",
+      "slug": "cambridge-vocabulary-for-ielts-with-answers-0768",
+      "title": "Cambridge-Vocabulary-for-IELTS-with-Answers",
+      "author": "Fahim Hossain",
+      "description": "Uploaded via Admin Panel.",
+      "category": "Vocabulary",
+      "level": "Intermediate",
+      "pages": 1,
+      "source": "Original",
+      "pdfUrl": "/api/files/1790357864795-cambridge-vocabulary-for-ielts-with-answers.pdf",
+      "chapters": [
+        {
+          "page": 1,
+          "title": "Chapter 1",
+          "content": [
+            "PDF Book attached (/api/files/1790357864795-cambridge-vocabulary-for-ielts-with-answers.pdf). Use the PDF viewer tab above to read the full uploaded PDF."
+          ]
+        }
+      ]
+    },
+    {
       "id": "book-1",
       "slug": "practical-english-grammar-for-bangladeshi-learners",
       "title": "Practical English Grammar (Basic to Advanced)",

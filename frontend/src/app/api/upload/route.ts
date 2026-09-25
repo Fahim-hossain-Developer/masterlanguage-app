@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     await writeFile(filePath, buffer);
 
     return NextResponse.json({
-      url: `/uploads/${fileName}`,
+      url: `/api/files/${fileName}`,
       fileName: file.name,
       size: file.size,
     });
