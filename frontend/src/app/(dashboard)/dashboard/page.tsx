@@ -2,498 +2,376 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import {
   BookOpen,
   Headphones,
   PenTool,
   Mic,
-  Play,
-  Clock,
-  Zap,
-  Trophy,
-  Search,
-  Sun,
-  Moon,
-  Bell,
-  Crown,
-  UserCircle,
-  Target,
-  Calendar,
-  Flame,
-  ArrowUpRight,
   ArrowRight,
-  Sparkles,
-  Wand2,
-  Swords,
-  Pencil,
+  RotateCcw,
+  Bookmark,
+  CalendarCheck,
+  CheckCircle2,
+  FileCheck2,
+  GraduationCap,
 } from "lucide-react";
-import { useAuthStore } from "@/stores/auth.store";
-import { format } from "date-fns";
+import { DAILY_PRACTICE_DB, ENGLISH_LESSONS_DB } from "@/lib/question-bank";
+import {
+  getContinueLearningState,
+  getAllCompletedResults,
+  getSavedBookmarks,
+  getLatestActiveAttempt,
+  getCompletedLessonIds,
+  type ContinueLearningState,
+  type TestResultRecord,
+  type SavedBookmarkItem,
+  type ActiveTestAttempt,
+} from "@/lib/test-engine";
 
-export default function DashboardPage() {
-  const { user } = useAuthStore();
-  const { theme, setTheme } = useTheme();
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  const [targetBand, setTargetBand] = useState<string>("7.5");
-  const [editingTarget, setEditingTarget] = useState(false);
+export default function StudentDashboardPage() {
+  const [continueState, setContinueState] =
+    useState<ContinueLearningState | null>(null);
+  const [recentResults, setRecentResults] = useState<TestResultRecord[]>([]);
+  const [bookmarks, setBookmarks] = useState<SavedBookmarkItem[]>([]);
+  const [activeAttempt, setActiveAttempt] = useState<ActiveTestAttempt | null>(
+    null
+  );
+  const [completedLessonsCount, setCompletedLessonsCount] = useState(1);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
-    return () => clearInterval(timer);
+    setContinueState(getContinueLearningState());
+    setRecentResults(getAllCompletedResults());
+    setBookmarks(getSavedBookmarks());
+    setActiveAttempt(getLatestActiveAttempt());
+    setCompletedLessonIdsCount();
   }, []);
 
-  const fullName = user?.profile?.name || "Fahim Hossain";
-  const firstName = fullName.split(" ")[0];
-  const initial = firstName.charAt(0).toUpperCase();
-
-  const getGreeting = () => {
-    const hour = currentTime.getHours();
-    if (hour < 12) return "Good morning,";
-    if (hour < 17) return "Good afternoon,";
-    return "Good evening,";
+  const setCompletedLessonIdsCount = () => {
+    setCompletedLessonsCount(getCompletedLessonIds().length);
   };
 
-  const modules = [
-    {
-      id: "speaking",
-      title: "Speaking",
-      href: "/dashboard/speaking",
-      icon: Mic,
-      iconBg: "bg-emerald-500",
-      band: "—",
-      testsCount: "No tests yet",
-    },
-    {
-      id: "writing",
-      title: "Writing",
-      href: "/dashboard/writing",
-      icon: PenTool,
-      iconBg: "bg-rose-500",
-      band: "—",
-      testsCount: "No tests yet",
-    },
-    {
-      id: "reading",
-      title: "Reading",
-      href: "/dashboard/reading",
-      icon: BookOpen,
-      iconBg: "bg-blue-500",
-      band: "—",
-      testsCount: "No tests yet",
-    },
-    {
-      id: "listening",
-      title: "Listening",
-      href: "/dashboard/listening",
-      icon: Headphones,
-      iconBg: "bg-amber-400",
-      band: "—",
-      testsCount: "No tests yet",
-    },
-  ];
-
   return (
-    <div className="mx-auto max-w-[1220px] px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-      {/* ── Top Greeting & Action Bar ──────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200/70 dark:border-gray-800 pb-5">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      {/* ============================================================
+          1. WELCOME MESSAGE & BASIC PROGRESS SUMMARY
+      ============================================================ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6">
         <div>
-          <h1 className="text-2xl sm:text-[26px] tracking-tight text-gray-500 dark:text-gray-400 font-normal">
-            {getGreeting()}{" "}
-            <span className="font-bold text-gray-900 dark:text-white">
-              {firstName}
-            </span>
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
+            Student Dashboard
+          </span>
+          <h1 className="mt-1 text-2xl font-extrabold text-slate-900">
+            Welcome back! Ready for today&apos;s practice?
           </h1>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            {format(currentTime, "EEEE, MMMM d · h:mm a")}
+          <p className="mt-1 text-xs text-slate-600">
+            Pick up right where you left off in your English lessons or review your recent IELTS test mistakes.
           </p>
         </div>
 
-        {/* Right Controls */}
-        <div className="flex items-center gap-2.5">
-          {/* Search Input */}
-          <div className="relative hidden sm:flex items-center">
-            <Search className="absolute left-3.5 h-3.5 w-3.5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="h-9 w-52 rounded-full border border-gray-200 bg-white pl-9 pr-12 text-xs text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
-            />
-            <kbd className="absolute right-3 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:border-gray-700 dark:bg-gray-800">
-              ⌘K
-            </kbd>
+        {/* Simple Progress Pill */}
+        <div className="flex flex-wrap gap-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-center">
+            <span className="block text-[10px] font-bold uppercase text-slate-400">
+              Completed Lessons
+            </span>
+            <span className="text-base font-extrabold text-slate-900">
+              {completedLessonsCount} / {ENGLISH_LESSONS_DB.length}
+            </span>
           </div>
-
-          {/* Theme Switcher Pill */}
-          <div className="flex items-center rounded-full border border-gray-200 bg-white p-0.5 dark:border-gray-800 dark:bg-gray-900">
-            <button
-              onClick={() => setTheme("light")}
-              className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
-                theme !== "dark"
-                  ? "bg-gray-100 text-gray-900 shadow-2xs"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-              title="Light mode"
-            >
-              <Sun className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => setTheme("dark")}
-              className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
-                theme === "dark"
-                  ? "bg-gray-800 text-white shadow-2xs"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-              title="Dark mode"
-            >
-              <Moon className="h-3.5 w-3.5" />
-            </button>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-center">
+            <span className="block text-[10px] font-bold uppercase text-slate-400">
+              Completed Tests
+            </span>
+            <span className="text-base font-extrabold text-blue-700">
+              {recentResults.length}
+            </span>
           </div>
-
-          {/* Notification Bell */}
-          <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
-            <Bell className="h-4 w-4" />
-          </button>
-
-          {/* Upgrade Button */}
-          <Link
-            href="/dashboard/upgrade"
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:opacity-95 transition"
-          >
-            <Crown className="h-3.5 w-3.5 text-amber-300" />
-            Upgrade
-          </Link>
         </div>
       </div>
 
-      {/* ── Main 3-Column Content Area ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left / Center 8 Columns */}
-        <div className="lg:col-span-8 space-y-7">
-          {/* Dark Hero Card: Full IELTS Mock Test */}
-          <div className="relative overflow-hidden rounded-3xl bg-[#111318] p-6 sm:p-8 text-white shadow-md">
-            {/* Decorative Dot Matrix on Right */}
-            <div
-              className="pointer-events-none absolute right-0 bottom-0 h-40 w-64 opacity-25"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle, rgba(255,255,255,0.6) 1.5px, transparent 1.5px)",
-                backgroundSize: "12px 12px",
-              }}
-            />
-
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
-              {/* 2x2 Module Icon Grid */}
-              <div className="grid grid-cols-2 gap-2.5 shrink-0">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
-                  <BookOpen className="h-5 w-5" />
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
-                  <Headphones className="h-5 w-5" />
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
-                  <PenTool className="h-5 w-5" />
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
-                  <Mic className="h-5 w-5" />
-                </div>
-              </div>
-
-              {/* Hero Text & CTA */}
-              <div className="space-y-3">
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-                    Full IELTS mock test
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
-                    Reading, Listening, Writing and Speaking back to back.
-                  </p>
-                </div>
-
-                {/* Meta Pills */}
-                <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-400">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-gray-500" /> ~3 hours
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Zap className="h-3.5 w-3.5 text-gray-500" /> Real exam timing
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Trophy className="h-3.5 w-3.5 text-gray-500" /> Official band score
-                  </span>
-                </div>
-
-                <div className="pt-1">
-                  <Link
-                    href="/dashboard/full-mock"
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-bold text-gray-900 shadow-sm hover:bg-gray-100 transition"
-                  >
-                    <Play className="h-3.5 w-3.5 fill-gray-900" />
-                    Start full mock test
-                  </Link>
-                </div>
-              </div>
-            </div>
+      {/* ============================================================
+          OPTIONAL: RESUME AUTO-SAVED TEST BANNER
+      ============================================================ */}
+      {activeAttempt && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50/90 p-5">
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-800">
+              <RotateCcw className="h-3.5 w-3.5" /> Resume In-Progress Test
+            </span>
+            <h2 className="mt-1 text-base font-extrabold text-slate-900">
+              {activeAttempt.title}
+            </h2>
+            <p className="text-xs text-slate-600">
+              Auto-saved with {Object.keys(activeAttempt.answers).length} answered question(s).
+            </p>
           </div>
+          <Link
+            href={`/test-engine/${activeAttempt.attemptId}`}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 px-5 py-2.5 text-xs font-bold text-white shrink-0"
+          >
+            <span>Continue Test</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
 
-          {/* Individual Module Practice (2x2 Grid) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">
-                Individual module practice
-              </h2>
-              <span className="text-xs text-gray-400">
-                Pick a module to start
+      {/* ============================================================
+          2. CONTINUE LEARNING + RECENT TEST RESULT (2-COLUMN)
+      ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Continue Where You Left Off */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-700">
+                <GraduationCap className="h-4 w-4" />
+                Continue Learning
+              </span>
+              <span className="rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+                {continueState?.levelLabel || "Intermediate"} →{" "}
+                {continueState?.skill || "Grammar"}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {modules.map((mod) => {
-                const Icon = mod.icon;
-                return (
-                  <div
-                    key={mod.id}
-                    className="group flex flex-col justify-between rounded-3xl border border-gray-200/70 bg-white p-6 shadow-2xs hover:shadow-md hover:border-gray-300/80 dark:border-gray-800 dark:bg-gray-900 transition-all"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div
-                        className={`flex h-11 w-11 items-center justify-center rounded-full ${mod.iconBg} text-white shadow-xs`}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <span className="text-[11px] text-gray-400">
-                        {mod.testsCount}
-                      </span>
-                    </div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              {continueState?.lessonTitle ||
+                "English Grammar: Conditionals (Zero, First, Second & Third)"}
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              You were studying:{" "}
+              <strong>
+                {continueState?.levelLabel || "Intermediate"} →{" "}
+                {continueState?.skill || "Grammar"} →{" "}
+                {continueState?.topic || "Conditionals"}
+              </strong>
+            </p>
 
-                    <div className="mt-5">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        {mod.title}
-                      </h3>
-                    </div>
-
-                    <div className="mt-5 flex items-end justify-between">
-                      <div>
-                        <p className="text-[11px] text-gray-400">Average band</p>
-                        <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
-                          {mod.band}{" "}
-                          <span className="text-xs font-normal text-gray-400">
-                            / 9
-                          </span>
-                        </p>
-                      </div>
-
-                      <Link
-                        href={mod.href}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-[#111318] px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 transition"
-                      >
-                        Practice
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Progress Bar */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1.5">
+                <span>Lesson Progress</span>
+                <span className="font-bold text-blue-700">
+                  {continueState?.progressPct ?? 65}%
+                </span>
+              </div>
+              <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-blue-700 transition-all"
+                  style={{ width: `${continueState?.progressPct ?? 65}%` }}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Foundation English & AI Power Tools Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
             <Link
-              href="/dashboard/foundation"
-              className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 hover:border-blue-400 dark:border-gray-800 dark:bg-gray-900 transition"
+              href="/english"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-900"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                  Foundation (A1–C1)
-                </p>
-                <p className="text-[11px] text-gray-400 truncate">
-                  Grammar Lab & Vocab SRS
-                </p>
-              </div>
+              Change Level
             </Link>
-
             <Link
-              href="/dashboard/paraphraser"
-              className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 hover:border-violet-400 dark:border-gray-800 dark:bg-gray-900 transition"
+              href={continueState?.lessonHref || "/english/intermediate"}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-700 hover:bg-blue-800 px-4 py-2.5 text-xs font-bold text-white"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
-                <Wand2 className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                  AI Paraphraser
-                </p>
-                <p className="text-[11px] text-gray-400 truncate">
-                  Band 8+ sentence rewrites
-                </p>
-              </div>
-            </Link>
-
-            <Link
-              href="/dashboard/band-battle"
-              className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 hover:border-amber-400 dark:border-gray-800 dark:bg-gray-900 transition"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
-                <Swords className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                  Band Battle
-                </p>
-                <p className="text-[11px] text-gray-400 truncate">
-                  Live quiz challenge
-                </p>
-              </div>
+              <span>Continue Lesson</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
 
-        {/* Right 4 Columns: Profile, Streak, Plan, Recent Activity */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Profile & Study Plan Card */}
-          <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-2xs dark:border-gray-800 dark:bg-gray-900 space-y-5">
-            {/* Avatar & Name */}
-            <div className="flex items-center gap-3.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-lg font-bold text-white shadow-xs">
-                {initial}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                  {fullName}
-                </h3>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  FREE PLAN
-                </span>
-              </div>
-            </div>
-
-            {/* View Profile Button */}
-            <Link
-              href="/dashboard/settings"
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition"
-            >
-              <UserCircle className="h-3.5 w-3.5 text-gray-400" />
-              View profile
-            </Link>
-
-            {/* TARGET & EXAM Grid */}
-            <div className="grid grid-cols-2 border-y border-gray-100 dark:border-gray-800 py-3.5">
-              <div className="pr-3 border-r border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  <Target className="h-3 w-3" /> TARGET
-                </div>
-                <div className="mt-1 flex items-center gap-1.5">
-                  {editingTarget ? (
-                    <input
-                      type="text"
-                      value={targetBand}
-                      onChange={(e) => setTargetBand(e.target.value)}
-                      onBlur={() => setEditingTarget(false)}
-                      autoFocus
-                      className="w-12 rounded border border-blue-500 px-1 text-xs font-bold text-gray-900 dark:bg-gray-800 dark:text-white"
-                    />
-                  ) : (
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
-                      {user?.profile?.targetBand || "—"}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => setEditingTarget(true)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="pl-3">
-                <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                  <Calendar className="h-3 w-3" /> EXAM
-                </div>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
-                    —
-                  </span>
-                  <Link
-                    href="/dashboard/settings"
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Streak */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200">
-                  <Flame className="h-3.5 w-3.5 text-gray-400" />0 days streak
-                </div>
-                <span className="text-[11px] text-gray-400">All ▾</span>
-              </div>
-              <p className="text-[11px] text-gray-400">
-                No practice recorded yet.
-              </p>
-            </div>
-
-            {/* Today's Plan */}
-            <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-3">
-              <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">
-                Today&apos;s Plan
-              </h4>
-
-              <div className="flex flex-col items-center justify-center py-4 text-center space-y-1.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-400 dark:bg-gray-800">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  No study plan yet
-                </p>
-                <p className="text-[11px] text-gray-400 max-w-[200px]">
-                  Get daily goals across all four modules.
-                </p>
-              </div>
-
-              <Link
-                href="/dashboard/study-plan"
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#111318] py-2.5 text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 transition"
-              >
-                Create study plan <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Recent Activity Card */}
-          <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-2xs dark:border-gray-800 dark:bg-gray-900 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                RECENT ACTIVITY
+        {/* Recent Test & Mistake Review */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-700">
+                <FileCheck2 className="h-4 w-4" />
+                Recent Test Result
               </span>
               <Link
                 href="/dashboard/results"
-                className="text-[11px] font-bold text-blue-600 hover:underline"
+                className="text-xs font-bold text-blue-700 hover:underline"
               >
-                VIEW ALL
+                All History →
               </Link>
             </div>
-            <div className="py-5 text-center">
-              <p className="text-xs text-gray-400">No recent activity found.</p>
-            </div>
+
+            {recentResults[0] ? (
+              <div>
+                <h2 className="text-lg font-extrabold text-slate-900">
+                  {recentResults[0].title}
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Module: <strong>{recentResults[0].module}</strong> · Mode:{" "}
+                  {recentResults[0].mode}
+                </p>
+
+                <div className="mt-4 grid grid-cols-3 gap-2.5 text-center">
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <span className="block text-[10px] font-bold uppercase text-slate-400">
+                      Score
+                    </span>
+                    <span className="text-base font-extrabold text-slate-900">
+                      {recentResults[0].correctCount}/
+                      {recentResults[0].totalQuestions}
+                    </span>
+                  </div>
+                  <div className="rounded-xl bg-rose-50 p-3">
+                    <span className="block text-[10px] font-bold uppercase text-rose-700">
+                      Mistakes
+                    </span>
+                    <span className="text-base font-extrabold text-rose-700">
+                      {recentResults[0].incorrectCount}
+                    </span>
+                  </div>
+                  <div className="rounded-xl bg-blue-50 p-3">
+                    <span className="block text-[10px] font-bold uppercase text-blue-700">
+                      Band Est.
+                    </span>
+                    <span className="text-base font-extrabold text-blue-700">
+                      {recentResults[0].bandScore ?? "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">No tests completed yet.</p>
+            )}
           </div>
 
-          {/* Notifications Card */}
-          <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-2xs dark:border-gray-800 dark:bg-gray-900 space-y-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-              NOTIFICATIONS
-            </span>
-            <div className="py-3 text-center">
-              <p className="text-xs text-gray-400">You&apos;re all caught up!</p>
+          {recentResults[0] && (
+            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Review explanations for wrong answers
+              </span>
+              <Link
+                href={`/dashboard/results/${recentResults[0].attemptId}`}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-xs font-bold text-white"
+              >
+                <span>Review Mistakes</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* ============================================================
+          3. QUICK PRACTICE SHORTCUTS (4 IELTS MODULES)
+      ============================================================ */}
+      <div>
+        <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 mb-3">
+          Quick IELTS Module Practice
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: "Reading", href: "/ielts/reading", icon: BookOpen, sub: "Passages & Types" },
+            { label: "Listening", href: "/ielts/listening", icon: Headphones, sub: "Audio Sections" },
+            { label: "Writing", href: "/ielts/writing", icon: PenTool, sub: "Task 1 & Task 2" },
+            { label: "Speaking", href: "/ielts/speaking", icon: Mic, sub: "Parts 1, 2 & 3" },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 hover:border-blue-500 transition-all"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-slate-900">
+                    {item.label}
+                  </div>
+                  <div className="text-[11px] text-slate-500">{item.sub}</div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ============================================================
+          4. SAVED / BOOKMARKED CONTENT + DAILY PRACTICE
+      ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Saved Items */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <Bookmark className="h-4 w-4 text-blue-700" />
+              Saved / Bookmarked Content
+            </h3>
+            <Link
+              href="/dashboard/saved"
+              className="text-xs font-bold text-blue-700 hover:underline"
+            >
+              View All ({bookmarks.length}) →
+            </Link>
+          </div>
+
+          <div className="space-y-2.5">
+            {bookmarks.slice(0, 3).map((bm) => (
+              <Link
+                key={bm.id}
+                href={bm.href}
+                className="flex items-center justify-between rounded-xl border border-slate-200 p-3 hover:border-blue-400 transition-colors"
+              >
+                <div>
+                  <span className="rounded bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                    {bm.type}
+                  </span>
+                  <div className="mt-1 text-xs font-bold text-slate-900">
+                    {bm.title}
+                  </div>
+                  <div className="text-[11px] text-slate-500">{bm.subtitle}</div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Daily Practice */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <CalendarCheck className="h-4 w-4 text-blue-700" />
+              Today&apos;s Daily Practice Sets
+            </h3>
+            <Link
+              href="/daily-practice"
+              className="text-xs font-bold text-blue-700 hover:underline"
+            >
+              Open Daily Hub →
+            </Link>
+          </div>
+
+          <div className="space-y-2.5">
+            {DAILY_PRACTICE_DB.slice(0, 3).map((set) => (
+              <Link
+                key={set.id}
+                href={`/daily-practice?start=${set.id}`}
+                className="flex items-center justify-between rounded-xl border border-slate-200 p-3 hover:border-blue-400 transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900">
+                      {set.title}
+                    </span>
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                      {set.difficulty}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {set.category} · {set.durationMinutes} mins ·{" "}
+                    {set.questionIds.length} questions
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-blue-700 shrink-0" />
+              </Link>
+            ))}
           </div>
         </div>
       </div>

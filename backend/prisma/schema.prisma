@@ -139,6 +139,8 @@ model User {
   placementResults      PlacementResult[]
   conversationSessions  AIConversationSession[]
   createdCourses        Course[]          @relation("CourseCreator")
+  bookmarks             Bookmark[]
+  learningState         UserLearningState?
 
   @@map("users")
 }
@@ -723,3 +725,130 @@ model Notification {
 
   @@map("notifications")
 }
+
+// ─────────────────────────────────────────────
+// UNIFIED QUESTION BANK, BOOKS, TIPS, DAILY PRACTICE & BOOKMARKS
+// ─────────────────────────────────────────────
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ContentSource {
+  ORIGINAL
+  LICENSED
+  USER_PROVIDED
+  AUTHORIZED
+}
+
+enum EnglishLevel {
+  BASIC
+  ELEMENTARY
+  INTERMEDIATE
+  UPPER_INTERMEDIATE
+  ADVANCED
+}
+
+model QuestionBankItem {
+  id              String        @id @default(uuid())
+  module          String        // READING, LISTENING, WRITING, SPEAKING, GRAMMAR, VOCABULARY, DAILY_PRACTICE
+  category        String        // e.g. "Academic Reading", "Tenses", "Conditionals"
+  questionType    String        // MULTIPLE_CHOICE, TRUE_FALSE_NOT_GIVEN, MATCHING_HEADINGS, NOTE_COMPLETION, etc.
+  difficulty      Difficulty    @default(MEDIUM)
+  topic           String?
+  source          ContentSource @default(ORIGINAL)
+  sourceLabel     String?       @default("Original Practice Material")
+  testSlug        String?
+  passageId       String?
+  passageTitle    String?
+  passageHtml     String?       @db.Text
+  sectionLabel    String?
+  questionText    String        @db.Text
+  options         Json?         // [{ label: "A", text: "..." }]
+  correctAnswer   String
+  explanationEn   String?       @db.Text
+  explanationBn   String?       @db.Text
+  audioReference  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([module, questionType, difficulty])
+  @@map("question_bank_items")
+}
+
+model Book {
+  id            String        @id @default(uuid())
+  title         String
+  slug          String        @unique
+  description   String        @db.Text
+  coverUrl      String?
+  pdfUrl        String
+  category      String        // Grammar, Vocabulary, IELTS Guide, Reading
+  level         EnglishLevel  @default(INTERMEDIATE)
+  source        ContentSource @default(AUTHORIZED)
+  allowDownload Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+
+  @@map("books")
+}
+
+model TipArticle {
+  id                  String   @id @default(uuid())
+  title               String
+  slug                String   @unique
+  category            String   // Reading, Listening, Writing, Speaking, Vocabulary, Grammar, Time Management, Exam Strategy, Common Mistakes
+  thumbnailUrl        String?
+  summary             String
+  contentHtml         String   @db.Text
+  relatedPracticeUrl  String?
+  relatedQuestionType String?
+  createdAt           DateTime @default(now())
+
+  @@index([category])
+  @@map("tip_articles")
+}
+
+model DailyPracticeSet {
+  id              String     @id @default(uuid())
+  title           String
+  slug            String     @unique
+  category        String     // Grammar, Vocabulary, Reading, Listening, Writing, Speaking, IELTS
+  difficulty      Difficulty @default(MEDIUM)
+  durationMinutes Int        @default(10)
+  questionIds     String[]
+  createdAt       DateTime   @default(now())
+
+  @@map("daily_practice_sets")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType  String   // QUESTION, LESSON, TIP, BOOK, VOCABULARY
+  itemId    String
+  title     String
+  url       String
+  category  String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, itemType, itemId])
+  @@map("bookmarks")
+}
+
+model UserLearningState {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastLessonTitle String?
+  lastLessonUrl   String?
+  lastLevel       String?
+  lastProgressPct Int      @default(0)
+  activeAttemptId String?
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_learning_states")
+}
+

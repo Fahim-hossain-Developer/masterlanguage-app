@@ -293,8 +293,111 @@ async function main() {
         },
       ],
     });
-    console.log('✅ AI Conversation Scenarios seeded.');
   }
+
+  // 6. Seed Unified Question Bank Items, Books, Tips & Daily Practice Sets
+  const existingQB = await prisma.questionBankItem.count();
+  if (existingQB === 0) {
+    await prisma.questionBankItem.createMany({
+      data: [
+        {
+          module: 'READING',
+          category: 'Academic Reading',
+          questionType: 'TRUE_FALSE_NOT_GIVEN',
+          difficulty: 'EASY',
+          topic: 'Environment & Urban Planning',
+          source: 'ORIGINAL',
+          sourceLabel: 'Original Practice Set #1',
+          passageTitle: 'The Rise of Urban Micro-Forests in Modern Megacities',
+          questionText: 'Urban areas often record temperatures up to five degrees Celsius warmer than nearby rural regions.',
+          options: [{ label: 'TRUE', text: 'TRUE' }, { label: 'FALSE', text: 'FALSE' }, { label: 'NOT GIVEN', text: 'NOT GIVEN' }],
+          correctAnswer: 'TRUE',
+          explanationEn: 'Paragraph A states that metropolitan centers record temperatures up to five degrees Celsius higher than surrounding rural districts.',
+          explanationBn: 'প্যারাগ্রাফ A-তে স্পষ্ট বলা আছে যে শহরের তাপমাত্রা আশেপাশের গ্রামীণ এলাকার চেয়ে ৫ ডিগ্রি সেলসিয়াস পর্যন্ত বেশি হতে পারে।',
+        },
+        {
+          module: 'READING',
+          category: 'Academic Reading',
+          questionType: 'MATCHING_HEADINGS',
+          difficulty: 'MEDIUM',
+          topic: 'Environment & Urban Planning',
+          source: 'ORIGINAL',
+          sourceLabel: 'Original Practice Set #1',
+          passageTitle: 'The Rise of Urban Micro-Forests in Modern Megacities',
+          questionText: 'Select the most suitable heading for Paragraph B:',
+          options: [
+            { label: 'i', text: 'Long-term financial savings despite high initial costs' },
+            { label: 'ii', text: 'How dense planting accelerates canopy formation' },
+          ],
+          correctAnswer: 'ii',
+          explanationEn: 'Paragraph B explains how planting 3-4 native species per square meter accelerates vertical canopy formation.',
+          explanationBn: 'প্যারাগ্রাফ B-তে ঘন করে গাছ লাগানোর ফলে কীভাবে দ্রুত ক্যানোপি তৈরি হয় তা ব্যাখ্যা করা হয়েছে।',
+        },
+        {
+          module: 'GRAMMAR',
+          category: 'Tenses & Conditionals',
+          questionType: 'MULTIPLE_CHOICE',
+          difficulty: 'MEDIUM',
+          topic: 'Conditionals',
+          source: 'ORIGINAL',
+          sourceLabel: 'Original Grammar Bank',
+          questionText: 'If the municipal authority __________ better drainage systems last decade, the city would not experience severe waterlogging today.',
+          options: [
+            { label: 'A', text: 'built' },
+            { label: 'B', text: 'has built' },
+            { label: 'C', text: 'had built' },
+          ],
+          correctAnswer: 'C',
+          explanationEn: 'Unreal past conditions require the Past Perfect (had + past participle) in the if-clause.',
+          explanationBn: 'অতীতের অপূর্ণ শর্ত বোঝাতে If + Past Perfect (had built) বসে।',
+        },
+      ],
+    });
+    console.log('✅ Question Bank items seeded.');
+  }
+
+  await prisma.book.upsert({
+    where: { slug: 'practical-english-grammar-for-bangladeshi-learners' },
+    update: {},
+    create: {
+      title: 'Practical English Grammar (Basic to Advanced)',
+      slug: 'practical-english-grammar-for-bangladeshi-learners',
+      description: 'A step-by-step handbook covering Tenses, Articles, Prepositions, Subject-Verb Agreement, and Conditionals with English and Bangla explanations.',
+      pdfUrl: '/books/practical-english-grammar.pdf',
+      category: 'Grammar',
+      level: 'BASIC',
+      source: 'ORIGINAL',
+      allowDownload: false,
+    },
+  });
+
+  await prisma.tipArticle.upsert({
+    where: { slug: 'true-false-not-given-golden-rules' },
+    update: {},
+    create: {
+      title: 'How to Never Confuse FALSE and NOT GIVEN in IELTS Reading',
+      slug: 'true-false-not-given-golden-rules',
+      category: 'Reading',
+      summary: 'Learn the exact logical difference between a contradicted statement (FALSE) and an unmentioned claim (NOT GIVEN).',
+      contentHtml: '<p>Ask yourself whether the passage directly proves the opposite of the statement.</p>',
+      relatedPracticeUrl: '/ielts/question-types?type=True+%2F+False+%2F+Not+Given',
+      relatedQuestionType: 'TRUE_FALSE_NOT_GIVEN',
+    },
+  });
+
+  await prisma.dailyPracticeSet.upsert({
+    where: { slug: 'daily-ielts-reading-sprint' },
+    update: {},
+    create: {
+      title: 'Daily IELTS Reading Sprint (True/False/NG + Notes)',
+      slug: 'daily-ielts-reading-sprint',
+      category: 'IELTS',
+      difficulty: 'MEDIUM',
+      durationMinutes: 12,
+      questionIds: ['qb-read-001', 'qb-read-002', 'qb-read-003'],
+    },
+  });
+  console.log('✅ Books, Tips & Daily Practice sets seeded.');
 
   console.log('🎉 Database seed completed successfully!');
 }
