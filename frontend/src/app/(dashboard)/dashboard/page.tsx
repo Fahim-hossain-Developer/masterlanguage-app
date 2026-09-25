@@ -1,403 +1,501 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
 import {
   BookOpen,
-  Flame,
-  Clock,
-  ClipboardList,
-  ChevronRight,
+  Headphones,
+  PenTool,
+  Mic,
   Play,
-  ArrowRight,
-  Bot,
+  Clock,
+  Zap,
+  Trophy,
+  Search,
+  Sun,
+  Moon,
+  Bell,
+  Crown,
+  UserCircle,
   Target,
-  CheckCircle2,
-  Circle,
+  Calendar,
+  Flame,
+  ArrowUpRight,
+  ArrowRight,
+  Sparkles,
+  Wand2,
+  Swords,
+  Pencil,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { StatCard } from "@/components/common/stat-card";
-import { SkeletonStatCard, SkeletonList } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/stores/auth.store";
-import api from "@/lib/api";
-import type { UserStats, WeakArea, StudyActivity, StudyPlanItem } from "@/types";
 import { format } from "date-fns";
-
-// ─── Mock data for preview (replace with real API calls) ──────────────────────
-const MOCK_STATS: UserStats = {
-  totalStudyHours: 127,
-  studyStreak: 12,
-  longestStreak: 24,
-  totalPoints: 4850,
-  testsCompleted: 34,
-  lessonsCompleted: 89,
-  currentBand: 6.5,
-  weeklyGoalMinutes: 300,
-  weeklyStudiedMinutes: 210,
-};
-
-const MOCK_WEAK_AREAS: WeakArea[] = [
-  { category: "IELTS Writing Task 2 (Coherence)", score: 55, maxScore: 100 },
-  { category: "Complex Tenses & Prepositions (B1)", score: 62, maxScore: 100 },
-  { category: "IELTS Speaking Part 3 (Fluency)", score: 68, maxScore: 100 },
-  { category: "Academic Vocabulary & Collocations", score: 71, maxScore: 100 },
-];
-
-const MOCK_ACTIVITIES: StudyActivity[] = [
-  {
-    id: "1",
-    userId: "u1",
-    type: "TEST_TAKEN",
-    description: "Completed IELTS Reading Mock Test #8",
-    points: 150,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "2",
-    userId: "u1",
-    type: "AI_FEEDBACK",
-    description: "AI evaluated your Writing Task 2 essay (Band 6.5)",
-    points: 50,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: "3",
-    userId: "u1",
-    type: "LESSON_COMPLETED",
-    description: "Finished: Grammar Lab - Conditionals & Modals (B1)",
-    points: 80,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: "4",
-    userId: "u1",
-    type: "VOCABULARY_PRACTICED",
-    description: "Practiced 25 Oxford 3000 Academic Vocabulary cards",
-    points: 40,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-];
-
-const MOCK_STUDY_PLAN: StudyPlanItem[] = [
-  {
-    id: "sp1",
-    title: "IELTS Writing Task 2 Practice",
-    type: "WRITING_TASK",
-    duration: 45,
-    completed: true,
-  },
-  {
-    id: "sp2",
-    title: "Grammar Lab: Subject-Verb Agreement",
-    type: "GRAMMAR_LAB",
-    duration: 20,
-    completed: false,
-  },
-  {
-    id: "sp3",
-    title: "IELTS Listening Section 3",
-    type: "QUIZ",
-    duration: 30,
-    completed: false,
-  },
-  {
-    id: "sp4",
-    title: "AI Speaking Practice Session",
-    type: "SPEAKING_PRACTICE",
-    duration: 15,
-    completed: false,
-  },
-];
-
-const activityIconMap: Record<StudyActivity["type"], string> = {
-  LESSON_COMPLETED: "📚",
-  TEST_TAKEN: "📝",
-  VOCABULARY_PRACTICED: "🔤",
-  SPEAKING_SESSION: "🎙️",
-  GRAMMAR_EXERCISE: "✍️",
-  AI_FEEDBACK: "🤖",
-};
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { theme, setTheme } = useTheme();
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [targetBand, setTargetBand] = useState<string>("7.5");
+  const [editingTarget, setEditingTarget] = useState(false);
 
-  // In production these would be real API queries:
-  // const { data: stats, isLoading } = useQuery({ queryKey: ['user-stats'], queryFn: () => api.get('/stats').then(r => r.data.data) });
-  const stats = MOCK_STATS;
-  const isLoadingStats = false;
-  const weeklyProgress = Math.round(
-    (stats.weeklyStudiedMinutes / stats.weeklyGoalMinutes) * 100
-  );
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+  const fullName = user?.profile?.name || "Fahim Hossain";
+  const firstName = fullName.split(" ")[0];
+  const initial = firstName.charAt(0).toUpperCase();
+
+  const getGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return "Good morning,";
+    if (hour < 17) return "Good afternoon,";
+    return "Good evening,";
   };
 
+  const modules = [
+    {
+      id: "speaking",
+      title: "Speaking",
+      href: "/dashboard/speaking",
+      icon: Mic,
+      iconBg: "bg-emerald-500",
+      band: "—",
+      testsCount: "No tests yet",
+    },
+    {
+      id: "writing",
+      title: "Writing",
+      href: "/dashboard/writing",
+      icon: PenTool,
+      iconBg: "bg-rose-500",
+      band: "—",
+      testsCount: "No tests yet",
+    },
+    {
+      id: "reading",
+      title: "Reading",
+      href: "/dashboard/reading",
+      icon: BookOpen,
+      iconBg: "bg-blue-500",
+      band: "—",
+      testsCount: "No tests yet",
+    },
+    {
+      id: "listening",
+      title: "Listening",
+      href: "/dashboard/listening",
+      icon: Headphones,
+      iconBg: "bg-amber-400",
+      band: "—",
+      testsCount: "No tests yet",
+    },
+  ];
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* ── Welcome Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="mx-auto max-w-[1220px] px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+      {/* ── Top Greeting & Action Bar ──────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200/70 dark:border-gray-800 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {greeting()}, {user?.profile?.name?.split(" ")[0] ?? "Learner"}! 👋
+          <h1 className="text-2xl sm:text-[26px] tracking-tight text-gray-500 dark:text-gray-400 font-normal">
+            {getGreeting()}{" "}
+            <span className="font-bold text-gray-900 dark:text-white">
+              {firstName}
+            </span>
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {format(new Date(), "EEEE, MMMM d")} ·{" "}
-            {user?.profile?.targetTrack
-              ? `Track: ${user.profile.targetTrack.replace(/_/g, " ")}`
-              : "Set your learning track in settings"}
-            {user?.profile?.targetBand && ` · Goal: Band ${user.profile.targetBand}`}
-            {user?.profile?.currentCEFR && ` · Level: ${user.profile.currentCEFR}`}
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {format(currentTime, "EEEE, MMMM d · h:mm a")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" asChild>
-            <a href="/dashboard/tests">
-              <ClipboardList className="h-4 w-4" />
-              Take a Test
-            </a>
-          </Button>
-          <Button size="sm" asChild>
-            <a href="/dashboard/ai-tutor">
-              <Bot className="h-4 w-4" />
-              AI Tutor
-            </a>
-          </Button>
+
+        {/* Right Controls */}
+        <div className="flex items-center gap-2.5">
+          {/* Search Input */}
+          <div className="relative hidden sm:flex items-center">
+            <Search className="absolute left-3.5 h-3.5 w-3.5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="h-9 w-52 rounded-full border border-gray-200 bg-white pl-9 pr-12 text-xs text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+            />
+            <kbd className="absolute right-3 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:border-gray-700 dark:bg-gray-800">
+              ⌘K
+            </kbd>
+          </div>
+
+          {/* Theme Switcher Pill */}
+          <div className="flex items-center rounded-full border border-gray-200 bg-white p-0.5 dark:border-gray-800 dark:bg-gray-900">
+            <button
+              onClick={() => setTheme("light")}
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
+                theme !== "dark"
+                  ? "bg-gray-100 text-gray-900 shadow-2xs"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              title="Light mode"
+            >
+              <Sun className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setTheme("dark")}
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
+                theme === "dark"
+                  ? "bg-gray-800 text-white shadow-2xs"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              title="Dark mode"
+            >
+              <Moon className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Notification Bell */}
+          <button className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+            <Bell className="h-4 w-4" />
+          </button>
+
+          {/* Upgrade Button */}
+          <Link
+            href="/dashboard/upgrade"
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:opacity-95 transition"
+          >
+            <Crown className="h-3.5 w-3.5 text-amber-300" />
+            Upgrade
+          </Link>
         </div>
       </div>
 
-      {/* ── Stats Grid ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {isLoadingStats ? (
-          Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
-        ) : (
-          <>
-            <StatCard
-              title="Current Band"
-              value={`${stats.currentBand ?? "N/A"}`}
-              icon={Target}
-              description="IELTS Band Score"
-              trend={{ value: 5, label: "vs last test", positive: true }}
-              iconClassName="bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+      {/* ── Main 3-Column Content Area ─────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left / Center 8 Columns */}
+        <div className="lg:col-span-8 space-y-7">
+          {/* Dark Hero Card: Full IELTS Mock Test */}
+          <div className="relative overflow-hidden rounded-3xl bg-[#111318] p-6 sm:p-8 text-white shadow-md">
+            {/* Decorative Dot Matrix on Right */}
+            <div
+              className="pointer-events-none absolute right-0 bottom-0 h-40 w-64 opacity-25"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, rgba(255,255,255,0.6) 1.5px, transparent 1.5px)",
+                backgroundSize: "12px 12px",
+              }}
             />
-            <StatCard
-              title="Study Streak"
-              value={`${stats.studyStreak} days`}
-              icon={Flame}
-              description={`Best: ${stats.longestStreak} days`}
-              iconClassName="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-            />
-            <StatCard
-              title="Study Hours"
-              value={`${stats.totalStudyHours}h`}
-              icon={Clock}
-              description="Total time invested"
-              trend={{ value: 12, label: "vs last week", positive: true }}
-              iconClassName="bg-secondary-100 text-secondary-600 dark:bg-secondary-900/30 dark:text-secondary-400"
-            />
-            <StatCard
-              title="Tests Taken"
-              value={stats.testsCompleted}
-              icon={ClipboardList}
-              description={`${stats.lessonsCompleted} lessons done`}
-              iconClassName="bg-success-100 text-success-600 dark:bg-green-900/30 dark:text-green-400"
-            />
-          </>
-        )}
-      </div>
 
-      {/* ── Weekly Progress ───────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Weekly Study Goal</CardTitle>
-            <Badge variant={weeklyProgress >= 100 ? "success" : "default"}>
-              {weeklyProgress >= 100 ? "🎉 Completed!" : `${weeklyProgress}%`}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Progress
-            value={weeklyProgress}
-            indicatorClassName={
-              weeklyProgress >= 100 ? "bg-success-500" : "bg-primary-500"
-            }
-            showLabel
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {stats.weeklyStudiedMinutes} / {stats.weeklyGoalMinutes} minutes studied
-            this week
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* ── Middle Grid: Study Plan + Weak Areas ─────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Study Plan */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Today&apos;s Study Plan</CardTitle>
-              <Badge variant="ghost">
-                {MOCK_STUDY_PLAN.filter((i) => i.completed).length}/
-                {MOCK_STUDY_PLAN.length} done
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {MOCK_STUDY_PLAN.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-                >
-                  {item.completed ? (
-                    <CheckCircle2 className="h-5 w-5 text-success-500 shrink-0" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-300 dark:text-gray-600 shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm font-medium truncate ${
-                        item.completed
-                          ? "line-through text-gray-400"
-                          : "text-gray-900 dark:text-white"
-                      }`}
-                    >
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {item.duration} min
-                    </p>
-                  </div>
-                  {!item.completed && (
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label={`Start ${item.title}`}
-                    >
-                      <Play className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Weak Areas */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Weak Areas</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs" asChild>
-                <a href="/dashboard/progress">
-                  View all <ChevronRight className="h-3.5 w-3.5" />
-                </a>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              {MOCK_WEAK_AREAS.map((area) => (
-                <li key={area.category} className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {area.category}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {area.score}%
-                    </span>
-                  </div>
-                  <Progress
-                    value={(area.score / area.maxScore) * 100}
-                    indicatorClassName={
-                      area.score < 60
-                        ? "bg-danger-500"
-                        : area.score < 75
-                        ? "bg-warning-500"
-                        : "bg-success-500"
-                    }
-                  />
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ── Recent Activity ───────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs">
-              View all <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3">
-            {MOCK_ACTIVITIES.map((activity) => (
-              <li
-                key={activity.id}
-                className="flex items-start gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 text-base shrink-0">
-                  {activityIconMap[activity.type]}
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
+              {/* 2x2 Module Icon Grid */}
+              <div className="grid grid-cols-2 gap-2.5 shrink-0">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
+                  <BookOpen className="h-5 w-5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {formatRelativeTime(activity.createdAt)}
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
+                  <Headphones className="h-5 w-5" />
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
+                  <PenTool className="h-5 w-5" />
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-gray-200">
+                  <Mic className="h-5 w-5" />
+                </div>
+              </div>
+
+              {/* Hero Text & CTA */}
+              <div className="space-y-3">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+                    Full IELTS mock test
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
+                    Reading, Listening, Writing and Speaking back to back.
                   </p>
                 </div>
-                <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 shrink-0">
-                  +{activity.points} pts
+
+                {/* Meta Pills */}
+                <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-400">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-gray-500" /> ~3 hours
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Zap className="h-3.5 w-3.5 text-gray-500" /> Real exam timing
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Trophy className="h-3.5 w-3.5 text-gray-500" /> Official band score
+                  </span>
+                </div>
+
+                <div className="pt-1">
+                  <Link
+                    href="/dashboard/full-mock"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-bold text-gray-900 shadow-sm hover:bg-gray-100 transition"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-gray-900" />
+                    Start full mock test
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Individual Module Practice (2x2 Grid) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                Individual module practice
+              </h2>
+              <span className="text-xs text-gray-400">
+                Pick a module to start
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {modules.map((mod) => {
+                const Icon = mod.icon;
+                return (
+                  <div
+                    key={mod.id}
+                    className="group flex flex-col justify-between rounded-3xl border border-gray-200/70 bg-white p-6 shadow-2xs hover:shadow-md hover:border-gray-300/80 dark:border-gray-800 dark:bg-gray-900 transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div
+                        className={`flex h-11 w-11 items-center justify-center rounded-full ${mod.iconBg} text-white shadow-xs`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="text-[11px] text-gray-400">
+                        {mod.testsCount}
+                      </span>
+                    </div>
+
+                    <div className="mt-5">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {mod.title}
+                      </h3>
+                    </div>
+
+                    <div className="mt-5 flex items-end justify-between">
+                      <div>
+                        <p className="text-[11px] text-gray-400">Average band</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+                          {mod.band}{" "}
+                          <span className="text-xs font-normal text-gray-400">
+                            / 9
+                          </span>
+                        </p>
+                      </div>
+
+                      <Link
+                        href={mod.href}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#111318] px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 transition"
+                      >
+                        Practice
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Foundation English & AI Power Tools Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <Link
+              href="/dashboard/foundation"
+              className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 hover:border-blue-400 dark:border-gray-800 dark:bg-gray-900 transition"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  Foundation (A1–C1)
+                </p>
+                <p className="text-[11px] text-gray-400 truncate">
+                  Grammar Lab & Vocab SRS
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/dashboard/paraphraser"
+              className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 hover:border-violet-400 dark:border-gray-800 dark:bg-gray-900 transition"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
+                <Wand2 className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  AI Paraphraser
+                </p>
+                <p className="text-[11px] text-gray-400 truncate">
+                  Band 8+ sentence rewrites
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/dashboard/band-battle"
+              className="flex items-center gap-3 rounded-2xl border border-gray-200/70 bg-white p-4 hover:border-amber-400 dark:border-gray-800 dark:bg-gray-900 transition"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
+                <Swords className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  Band Battle
+                </p>
+                <p className="text-[11px] text-gray-400 truncate">
+                  Live quiz challenge
+                </p>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Right 4 Columns: Profile, Streak, Plan, Recent Activity */}
+        <div className="lg:col-span-4 space-y-4">
+          {/* Profile & Study Plan Card */}
+          <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-2xs dark:border-gray-800 dark:bg-gray-900 space-y-5">
+            {/* Avatar & Name */}
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-lg font-bold text-white shadow-xs">
+                {initial}
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                  {fullName}
+                </h3>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  FREE PLAN
                 </span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+              </div>
+            </div>
 
-      {/* ── Quick Actions ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Button size="lg" className="h-16 gap-3 text-base" asChild>
-          <a href="/dashboard/tests">
-            <ClipboardList className="h-6 w-6" />
-            Start Mock Test
-          </a>
-        </Button>
-        <Button size="lg" variant="outline" className="h-16 gap-3 text-base" asChild>
-          <a href="/dashboard/ielts">
-            <BookOpen className="h-6 w-6" />
-            Continue Lesson
-          </a>
-        </Button>
-        <Button size="lg" variant="secondary" className="h-16 gap-3 text-base" asChild>
-          <a href="/dashboard/japanese">
-            <span className="text-xl font-jp">語</span>
-            Practice Vocab
-          </a>
-        </Button>
+            {/* View Profile Button */}
+            <Link
+              href="/dashboard/settings"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 transition"
+            >
+              <UserCircle className="h-3.5 w-3.5 text-gray-400" />
+              View profile
+            </Link>
+
+            {/* TARGET & EXAM Grid */}
+            <div className="grid grid-cols-2 border-y border-gray-100 dark:border-gray-800 py-3.5">
+              <div className="pr-3 border-r border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  <Target className="h-3 w-3" /> TARGET
+                </div>
+                <div className="mt-1 flex items-center gap-1.5">
+                  {editingTarget ? (
+                    <input
+                      type="text"
+                      value={targetBand}
+                      onChange={(e) => setTargetBand(e.target.value)}
+                      onBlur={() => setEditingTarget(false)}
+                      autoFocus
+                      className="w-12 rounded border border-blue-500 px-1 text-xs font-bold text-gray-900 dark:bg-gray-800 dark:text-white"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
+                      {user?.profile?.targetBand || "—"}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setEditingTarget(true)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="pl-3">
+                <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  <Calendar className="h-3 w-3" /> EXAM
+                </div>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
+                    —
+                  </span>
+                  <Link
+                    href="/dashboard/settings"
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Streak */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200">
+                  <Flame className="h-3.5 w-3.5 text-gray-400" />0 days streak
+                </div>
+                <span className="text-[11px] text-gray-400">All ▾</span>
+              </div>
+              <p className="text-[11px] text-gray-400">
+                No practice recorded yet.
+              </p>
+            </div>
+
+            {/* Today's Plan */}
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-3">
+              <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                Today&apos;s Plan
+              </h4>
+
+              <div className="flex flex-col items-center justify-center py-4 text-center space-y-1.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-400 dark:bg-gray-800">
+                  <BookOpen className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  No study plan yet
+                </p>
+                <p className="text-[11px] text-gray-400 max-w-[200px]">
+                  Get daily goals across all four modules.
+                </p>
+              </div>
+
+              <Link
+                href="/dashboard/study-plan"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#111318] py-2.5 text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 transition"
+              >
+                Create study plan <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Recent Activity Card */}
+          <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-2xs dark:border-gray-800 dark:bg-gray-900 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                RECENT ACTIVITY
+              </span>
+              <Link
+                href="/dashboard/results"
+                className="text-[11px] font-bold text-blue-600 hover:underline"
+              >
+                VIEW ALL
+              </Link>
+            </div>
+            <div className="py-5 text-center">
+              <p className="text-xs text-gray-400">No recent activity found.</p>
+            </div>
+          </div>
+
+          {/* Notifications Card */}
+          <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-2xs dark:border-gray-800 dark:bg-gray-900 space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+              NOTIFICATIONS
+            </span>
+            <div className="py-3 text-center">
+              <p className="text-xs text-gray-400">You&apos;re all caught up!</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
